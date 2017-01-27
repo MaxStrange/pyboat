@@ -1,6 +1,8 @@
 """
-This is the code for the UCT (Upper Confidence Bounds for Trees)
-algorithm.
+This is the AI module's main API.
+It contains only one API function: get_best_move,
+which, usurprisingly, gets what the AI believes is its best set of
+orders.
 """
 
 from ai.node import Node
@@ -10,16 +12,9 @@ import random
 from time import process_time
 
 
-def get_best_move(cur_state, reward_function):
+def get_best_move(cur_state):
     """
-    Gets the AI's best move. Or at least, gets what it thinks is its
-    best move.
-    The reward_runction parameter is a function that evaluates a terminal
-    board position (a game-over gamestate) and returns a value in the interval
-    [0, 1], where lower values indicate a bad outcome for the AI, and higher
-    values indicated a good outcome for the AI.
-    Note that this function is only ever evaluated on TERMINAL game states,
-    so it is fine if it is undefined for non-terminal game states.
+    Gets what the AI believes is its best set of orders.
     """
     return _uct_search(cur_state, reward_function)
 
