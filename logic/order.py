@@ -32,7 +32,6 @@ class Order:
         if order[0] != 'A':
             raise ParseError
         order = order.split(' ')
-        print("Order: ", str(order))
         if len(order) == 4:
             # A trieste -> budapest
             self.order_type = "move"
@@ -59,6 +58,26 @@ class Order:
             self.sup_dest = order[4]
         else:
             raise ParseError
+
+    def __repr__(self):
+        s = "Order: "
+        for k, v in self.__dict__.items():
+            s += str(k) + ": " + str(v)
+        return s
+
+    def __str__(self):
+        as_str = "(" + self.order_type + ": "
+        if self.order_type == "move":
+            as_str += self.src + " -> " + self.dest + ")"
+        elif self.order_type == "sup_move":
+            as_str += self.src + " sup "
+            as_str += self.sup_src + " -> " + self.sup_dest + ")"
+        elif self.order_type == "hold":
+            as_str += self.src + " hold " + ")"
+        elif sel.order_type == "sup_hold":
+            as_str += self.src + " sup "
+            as_str += self.sup_src + " hold " + ")"
+        return as_str
 
 
 

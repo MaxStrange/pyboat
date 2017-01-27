@@ -46,13 +46,22 @@ class GameState:
         try:
             parsed_orders = []
             for o in orders.split(';'):
-                print("Order: ", str(o))
                 order = Order(o)
                 parsed_orders.append(order)
         except ParseError:
             return False, o
 
+        print("Got these orders: ")
+        for o in parsed_orders:
+            print(str(o))
+
         # TODO: check each order for legality
+        # First, check each order for state names that exist
+        # Second: Check each state for actually having a player army
+        # Third: Check each move for being from a state adjacent to
+        # the target
+        # Fourth: Check each support to make sure that the army is
+        # in a state that is adjacent to the destination state
         return True, None
 
 
