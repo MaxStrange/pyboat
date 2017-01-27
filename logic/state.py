@@ -35,7 +35,7 @@ class GameState:
         """
         return self.board.formatted_display()
 
-    def orders_are_valid(orders):
+    def orders_are_valid(self, orders):
         """
         Checks if the given orders are valid. They may be invalid because of
         parsing problems (due to the fact that these are raw inputs from the command
@@ -44,12 +44,16 @@ class GameState:
         are not illegal, True is returned.
         """
         try:
-            parsed_orders = [Order(o) for o in orders.split(';')]
-        except ParsingError:
-            return False
+            parsed_orders = []
+            for o in orders.split(';'):
+                print("Order: ", str(o))
+                order = Order(o)
+                parsed_orders.append(order)
+        except ParseError:
+            return False, o
 
         # TODO: check each order for legality
-        return True
+        return True, None
 
 
 

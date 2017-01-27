@@ -2,7 +2,7 @@
 This module holds the Order class.
 """
 
-class ParseError(Error):
+class ParseError(Exception):
     """
     An Error used to indicated that the command line orders given
     cannot be parsed into a sensible order.
@@ -26,11 +26,13 @@ class Order:
         If it cannot be made to match one of these, then a ParseError
         is raised.
         """
-        order.strip("()")
-        order.strip()
+        order = order.strip()
+        order = order.strip('()')
+        order = order.strip()
         if order[0] != 'A':
             raise ParseError
         order = order.split(' ')
+        print("Order: ", str(order))
         if len(order) == 4:
             # A trieste -> budapest
             self.order_type = "move"
