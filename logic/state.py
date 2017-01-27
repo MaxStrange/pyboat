@@ -2,14 +2,13 @@
 This is the MVC API for the model.
 """
 from logic.board import Board
+from logic.order import Order
+from logic.order import ParseError
 import yaml
 
 
 class GameState:
     def __init__(self, config_file):
-        """
-        Does any initialization necessary.
-        """
         # Parse the YAML file and set up the state from its parameters
         with open(config_file) as f:
             try:
@@ -28,6 +27,34 @@ class GameState:
         """
         # TODO
         pass
+
+    def get_formatted_display(self):
+        """
+        Returns the board in a view suitable for the user on the
+        command line.
+        """
+        return self.board.formatted_display()
+
+    def orders_are_valid(orders):
+        """
+        Checks if the given orders are valid. They may be invalid because of
+        parsing problems (due to the fact that these are raw inputs from the command
+        line) or due to them being illegal. Both of these cases are handled,
+        and in these cases, False is returned. If the orders can be parsed and they
+        are not illegal, True is returned.
+        """
+        try:
+            parsed_orders = [Order(o) for o in orders.split(';')]
+        except ParsingError:
+            return False
+
+        # TODO: check each order for legality
+        return True
+
+
+
+
+
 
 
 

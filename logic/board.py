@@ -22,10 +22,6 @@ class Board:
         self._drawings = drawings
         self._drawing_layers = instructions
 
-
-        self.formatted_display()
-        exit(0)
-
     def formatted_display(self):
         """
         Returns the game board as a string to be displayed.
@@ -68,7 +64,9 @@ class Board:
                 layer_text += os.linesep
             h += 1
             overall_map += layer_text
-        print(overall_map)
+
+        # TODO: parse out the [U] tags and place the correct units
+        return overall_map
 
 
 
