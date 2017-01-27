@@ -49,7 +49,7 @@ class Board:
         # whole layer of text
         overall_map = ""
         h = 0
-        for layer_name, state_names in self._drawing_layers.items():
+        for layer_name, state_names in sorted(self._drawing_layers.items()):
             layer_text = ""
             for i in range(max_heights[h]):
                 for name in state_names:
