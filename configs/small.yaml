@@ -1,0 +1,64 @@
+board:
+    states:
+        - ruhr: |
+            -------
+            | [U] |
+            |     |
+            -------
+        - kiel: |
+            -----------------
+            |       [U]     |
+            |               |
+            -----------------
+        - berlin: |
+            -----------
+            |   [U]   |
+            |         |
+            -----------
+        - prussia: |
+            -------
+            | [U] |
+            |     |
+            -------
+        - munich: |
+            --------------------------
+            |           [U]          |
+            --------------------------
+        - silesia: |
+            --------
+            |  [U] |
+            --------
+    board_drawing:
+        - layer0:
+            - ruhr
+            - kiel
+            - berlin
+            - prussia
+        - layer1:
+            - munich
+            - silesia
+    board_matrix:
+        - ruhr:
+            - kiel
+            - munich
+        - kiel:
+            - ruhr
+            - munich
+            - berlin
+        - berlin:
+            - kiel
+            - munich
+            - silesia
+            - prussia
+        - prussia:
+            - berlin
+            - silesia
+        - munich:
+            - ruhr
+            - kiel
+            - berlin
+            - silesia
+        - silesia:
+            - munich
+            - prussia
+            - berlin
