@@ -85,7 +85,6 @@ class Grid:
     """
     def __init__(self, text, state_ids, state_texts, layers):
         self.text_grid = [line for line in text.split(os.linesep)]
-        self.name_grid = {}
         for id_name_pair in state_ids:
             # Each YAML id_name_pair is a dict of one key to one val
             for k, v in id_name_pair.items():
