@@ -26,8 +26,15 @@ board:
             ------------------------------
         - silesia: |
             ------------
-            |silesia[U]|
+            |slsia [U] |
             ------------
+    board_ui_ids: # These are what the ui sees as the state names
+        - ruhr: ruhr
+        - kiel: kiel
+        - berlin: berlin
+        - prssa: prussia
+        - munich: munich
+        - slsia: silesia
     board_drawing:
         - layer0:
             - ruhr

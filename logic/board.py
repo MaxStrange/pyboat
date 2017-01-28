@@ -21,14 +21,20 @@ class Board:
 
         self._drawings = drawings
         self._drawing_layers = instructions
+        self._ids = board_config["board_ui_ids"]
+        self._map_drawing = self._format_map()
 
     def formatted_display(self):
         """
         Returns the game board as a string to be displayed.
         """
-        s = os.linesep
-        # Combine the artwork to get each row of text
+        return self._grid.display()
 
+    def _format_map(self):
+        """
+        Formats the background map once, so we don't have to do
+        it everytime we display the map.
+        """
         # Get the tallest item in each of the layers
         layers_heights = []
         for layer_name, state_names in self._drawing_layers.items():
@@ -65,8 +71,35 @@ class Board:
             h += 1
             overall_map += layer_text
 
-        # TODO: parse out the [U] tags and place the correct units
-        return overall_map
+        # Feed the result into the Grid object so it can keep track
+        # of the text from now on
+        self._grid = Grid(overall_map, self._ids, self._drawings,\
+                self._drawing_layers)
+
+
+class Grid:
+    """
+    Representation of the board as a grid of text lines. Gives
+    ways to access the states and units within this grid as
+    regions within that grid.
+    """
+    def __init__(self, text, state_ids, state_texts, layers):
+        self.text_grid = [line for line in text.split(os.linesep)]
+        self.name_grid = {}
+        for id_name_pair in state_ids:
+            # Each YAML id_name_pair is a dict of one key to one val
+            for k, v in id_name_pair.items():
+                state_id, state_name = k, v
+                drawing = state_texts[state_name]
+                # Assign an x,y tuple to each char in the drawing
+                # where the x,y is a point in the overall grid
+
+        # Leave off here TODO
+        assert(False)
+        exit(0)
+
+
+
 
 
 
