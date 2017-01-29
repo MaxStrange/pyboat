@@ -45,6 +45,9 @@ def _uct_search(game_state, reward_function):
     # most likely next game states rather than simply one,
     # and then it should choose orders that work best against both
     # (or all three) of these possibilities.
+    # It should simply use a true MCTS on the now perfect information
+    # to choose which set of orders will result in the best next turn,
+    # (so the depth would only end up being 1, but that's fine)
     best_move = best_child_of_root.move_that_derived_this_node()
     return best_move
 
@@ -53,7 +56,17 @@ def _search_helper(root, reward_function):
     start_time = process_time()
     while _within_computational_budget(start_time):
         v = _tree_policy(root)
-        delta = _default_policy(v.state, reward_function)
+        #delta = _default_policy(v.state, reward_function) # I don't believe the rollout is needed
+        # instead, delta should be derived from the likelihood of v
+        # happening. Which is already contained in the softmaxes and the confidence
+        # interval of the networks that chose the nodes leading to it
+        # Traditionally, the rollout is used to sample v's likelihood of resulting in
+        # a good result - but we don't actually care whether it turns out well for us or
+        # not, we only care if it is likely to happen. Once we identify the most likely
+        # few order sets, we will derive a set of orders for our own units that is
+        # near optimal against those most likely events.
+        # So instead:
+        delta = v.likelihood()
         _back_up(v, delta)
     best_child_of_root = _best_child(root, 0)
     return best_child_of_root
@@ -109,26 +122,28 @@ def _best_child(v, c):
     # This should never be reached
     assert(False)
 
-
-def _default_policy(game_state, reward_function):
-    # There are two options for this function:
-    # One is that it could be replaced with a neural network that predicts
-    # game outcomes from a board position. This might be a difficult network
-    # to train, but would be fast to execute.
-    # The other option is that you could use this module's MCTS recursively
-    # with a tiny computational budget for the rollout. This wouldn't require
-    # any more training of networks, but would require some fiddling to
-    # get tuned so that it works.
-    while not game_state.game_over():
-        action_set = random.choice(game_state.possible_moves())
-        game_state = copy.deepcopy(game_state)
-        game_state.take_turn(action_set)
-    # Whichever implementation you go with:
-    # IMPORTANT: The reward function would need to return a value close to 1
-    # for terminal game states that maximize ALL PLAYERS' victories, otherwise
-    # uct will keep returning game states where it does something smart while
-    # everyone else does something stupid - which is obviously not going to happen
-    return reward_function(game_state)
+# I actually don't think there is any need for a roll out.
+# If done properly, the search is going to produce the
+# order set that is most likely to occur
+#def _default_policy(game_state, reward_function):
+#    # There are two options for this function:
+#    # One is that it could be replaced with a neural network that predicts
+#    # game outcomes from a board position. This might be a difficult network
+#    # to train, but would be fast to execute.
+#    # The other option is that you could use this module's MCTS recursively
+#    # with a tiny computational budget for the rollout. This wouldn't require
+#    # any more training of networks, but would require some fiddling to
+#    # get tuned so that it works.
+#    while not game_state.game_over():
+#        action_set = random.choice(game_state.possible_moves())
+#        game_state = copy.deepcopy(game_state)
+#        game_state.take_turn(action_set)
+#    # Whichever implementation you go with:
+#    # IMPORTANT: The reward function would need to return a value close to 1
+#    # for terminal game states that maximize ALL PLAYERS' victories, otherwise
+#    # uct will keep returning game states where it does something smart while
+#    # everyone else does something stupid - which is obviously not going to happen
+#    return reward_function(game_state)
 
 
 def _delta_function(delta, v):

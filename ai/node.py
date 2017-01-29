@@ -61,6 +61,13 @@ class Node:
         self.already_tried_action_sets.append(action)
         return child_node
 
+    def likelihood(self):
+        """
+        Returns this node's most chance of occuring as a float between 0 and 1.
+        """
+        # TODO
+        pass
+
     def move_that_derived_this_node(self):
         """
         Returns the action that created this Node's game state.
