@@ -29,9 +29,16 @@ def _uct_search(game_state, reward_function):
 
     # You would now have a best_child_of_root that is really the
     # most likely child to occur. At this point, that child is of
-    # low resolution attack/defend orders, but it would need
-    # to somehow resolve these into actual orders,
-    # then it should optimize its own orders according to the now
+    # low resolution attack/defend orders.
+
+    # This leaves us with two options:
+    # One, we could use a neural network that, based on lowres
+    # orders, picks good high res orders (I'm not sure how that would
+    # work, and I don't see it being a great idea).
+
+    # Or two:
+    # It could somehow resolve the lowres orders into actual orders,
+    # then it could optimize its own orders according to the now
     # 'perfect' information it has of the next move (i.e., what it
     # believes everyone else is going to do)
     # Probably it would be best if it actually gets the top two or three
@@ -59,7 +66,6 @@ def _child_is_not_most_visited(child, root):
             if c.num_times_visited > child.num_times_visited:
                 return True
     return False
-
 
 
 def _back_up(v, delta):
@@ -105,11 +111,19 @@ def _best_child(v, c):
 
 
 def _default_policy(game_state, reward_function):
+    # There are two options for this function:
+    # One is that it could be replaced with a neural network that predicts
+    # game outcomes from a board position. This might be a difficult network
+    # to train, but would be fast to execute.
+    # The other option is that you could use this module's MCTS recursively
+    # with a tiny computational budget for the rollout. This wouldn't require
+    # any more training of networks, but would require some fiddling to
+    # get tuned so that it works.
     while not game_state.game_over():
-        # This function should be replaced with the policy network
-        action = random.choice(game_state.possible_moves())
+        action_set = random.choice(game_state.possible_moves())
         game_state = copy.deepcopy(game_state)
-        game_state.take_turn(action)
+        game_state.take_turn(action_set)
+    # Whichever implementation you go with:
     # IMPORTANT: The reward function would need to return a value close to 1
     # for terminal game states that maximize ALL PLAYERS' victories, otherwise
     # uct will keep returning game states where it does something smart while
@@ -148,7 +162,7 @@ def _try_to_get_untried_action_set(v):
         # If the action set so generated has already been generated before
         # by this node, then it returns False, None
         # otherwise it returns True, action_set
-        got_one, action_set = v.pull_from_most_likekly_action_sets()
+        got_one, action_set = v.pull_from_most_likely_action_sets()
     if got_one:
         return True, action_set
     else:
