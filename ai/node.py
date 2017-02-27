@@ -46,6 +46,9 @@ class Node:
         # in low res space and predicts the next game board. Again, this will be
         # supervised and take a board as its input, outputting a new board.
         child_node = Node(child_state)
+        # The child state should keep the orders that were used to derive
+        # it. So each unit should have an order associated with it which
+        # represents the order that it used last turn to get where it is now.
         child_node.parent = self
         child_node.name = self.name + "_" + str(child_node.move_that_derived_this_node())
         self.children.append(child_node)
@@ -73,6 +76,7 @@ class Node:
         children = [(times, c) for c, times in self.num_times_children_seen.items()]
         sorted_children = sorted(children)
         sorted_children = [tup[1] for tup in sorted_children]
+        assert(num_to_pick <= len(sorted_children))
         return [sorted_children[0:num_to_pick]
 
     def move_that_derived_this_node(self):
@@ -90,7 +94,7 @@ class Node:
         action_set = []
         for unit in self.softmaxes:
             r = random.uniform(0, 1)
-            # unit looks like this: (id, (prob, prob))
+            # unit looks like this: (id, (probMove, probHold))
             if r <= unit[1][0]:
                 choice = lowres_move
             else:

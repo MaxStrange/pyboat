@@ -31,6 +31,11 @@ def get_best_move(cur_state):
     # abjudicator, but the abjudicator function is not
     # a bijective function, and as such has no inverse.
     # So we will need some way of approximating the inverse.
+    # LUCKILY, we also happen to have low resolution orders tagged to each unit
+    # to help us determine how the units got here (that is, each unit in the
+    # child has a tag that says either that it participated in some fashion in
+    # a HOLD order to get here or that it participated in a MOVE order in some
+    # way to get here).
     most_likely_order_sets = [_inverse_abjudicate(\
             child.state, child.parent.state) for child\
             in most_likely_children]
@@ -59,6 +64,11 @@ def _inverse_abjudicate(derived_state, original_state):
     """
     Takes a state and the state from which it was derived
     and guesses as to what the orders were that created it.
+    The derived state has tags that tell us whether each unit participated in a
+    HOLD or in a MOVE. So this can just be a neural network that takes two game
+    states A and B, where A is a low-res game state, and which outputs the
+    high-res game state A*, given that B was the result of applying the orders
+    in A*.
     """
     pass # TODO
 
@@ -69,6 +79,4 @@ def _within_computational_budget(start):
     """
     elapsed_time = process_time() - start
     return elapsed_time < 1.5
-
-
 
