@@ -58,6 +58,18 @@ def _choose_best_orders(cur_state, most_likely_order_sets):
     should do, given that it now already has a few guesses as to what
     each of the other players is going to do with their units.
     """
+    # My current idea is to do a sort of annealing approach:
+    # Do a few thousand rounds of choosing random-without-replacement orders
+    # for my units (and combining them with what I believe the other people's
+    # orders are), abjudicating them, and evaluating the resulting game states.
+    # After that, we do another round, but this time, for half as long. This
+    # time, we generate random orders that explore orders that are similar to
+    # the most promising sets from the last phase of annealing. Keep doing
+    # this, halving the amount of iterations each time, until you have found
+    # the best set.
+    # You could maybe do this for each of the sets of orders in
+    # most_likely_order_sets, and then choose the set of orders that works best
+    # for the largest number of them.
     pass # TODO
 
 def _inverse_abjudicate(derived_state, original_state):
