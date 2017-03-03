@@ -58,18 +58,20 @@ def _choose_best_orders(cur_state, most_likely_order_sets):
     should do, given that it now already has a few guesses as to what
     each of the other players is going to do with their units.
     """
-    # My current idea is to do a sort of annealing approach:
-    # Do a few thousand rounds of choosing random-without-replacement orders
-    # for my units (and combining them with what I believe the other people's
-    # orders are), abjudicating them, and evaluating the resulting game states.
-    # After that, we do another round, but this time, for half as long. This
-    # time, we generate random orders that explore orders that are similar to
-    # the most promising sets from the last phase of annealing. Keep doing
-    # this, halving the amount of iterations each time, until you have found
-    # the best set.
-    # You could maybe do this for each of the sets of orders in
-    # most_likely_order_sets, and then choose the set of orders that works best
-    # for the largest number of them.
+    # Current idea:
+    # This is a special case of a network flow algorithm.
+    # We have units, which are source nodes, and which source exactly 1 unit of
+    # flow. We have locations, which are sink nodes, and which can take any
+    # number of flow units. Some of the sink nodes are special (the supply
+    # centers). From the most_likely_order_sets, we can evaluate a value, v,
+    # for each location (which is the strength that that location is going to
+    # experience, either due to attacking it or holding it, plus supports).
+    #
+    # The objective is to maximize the number of special sink nodes that have a
+    # flow value greater than v. This will lead to gaining (and retaining) the
+    # largest number of supply centers this turn. If the largest number is
+    # equal to the number we already have, we will need to use any excess flow
+    # to get closer to supply centers that we don't already have.
     pass # TODO
 
 def _inverse_abjudicate(derived_state, original_state):
