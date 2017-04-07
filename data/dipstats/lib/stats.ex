@@ -14,6 +14,8 @@ defmodule Stats do
     Enum.each(@countries, fn(country) -> spawn(fn -> sum_by_win_country(mypid, country, Stream.take_every(stream, 1)) end)end)
 
     recv_wins()
+    |> Map.to_list
+    |> Enum.sort(fn({_name1, num1}, {_name2, num2}) -> num1 >= num2 end)
   end
 
   defp sum_by_win_country(mypid, country, stream) do

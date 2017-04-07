@@ -21,8 +21,14 @@ defmodule Dipstats do
   Prints the country names in order of who is most likely to win, along with some frequentist statistics for them.
   """
   def print_winners do
-    Database.sql_players("WHERE won=1")
-    |> Stats.sort_by_wins
-    #|> MyIO.print_wins
+    {countries, wins} =
+        Database.sql_players("WHERE won=1")
+        |> Stats.sort_by_wins
+        |> unzip
+
+    str_countries = countries|> Enum.scan(0, fn(x, _) -> Atom.to_string(x) end)
+    DataFrame.Table.new([str_countries, wins])
   end
+
+  defp unzip(kwlist), do: {Keyword.keys(kwlist), Keyword.values(kwlist)}
 end

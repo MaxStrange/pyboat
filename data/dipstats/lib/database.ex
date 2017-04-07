@@ -14,7 +14,7 @@ The data that it returns via the Stream module is wrapped up in a map.
 
   """
   def sql_players(sql) do
-    {:ok, pid} = Mariaex.start_link(username: "root", database: "diplomacy", password: "")
+    {:ok, pid} = Mariaex.start_link(username: "root", database: "diplomacy")
     {:ok, result} = Mariaex.query(pid, "SELECT * FROM players " <> sql)
     Stream.take_every(result.rows, 1)
     |> Stream.map(fn(x) -> arrange_data_player(x) end)
