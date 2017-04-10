@@ -26,8 +26,9 @@ defmodule Dipstats do
         |> Stats.sort_by_wins
         |> unzip
 
-    str_countries = countries|> Enum.scan(0, fn(x, _) -> Atom.to_string(x) end)
-    DataFrame.Table.new([str_countries, wins])
+    str_countries = countries |> Enum.map(fn(x) -> Atom.to_string(x) end)
+    str_wins = wins |> Enum.map(fn(x) -> Integer.to_string(x) end)
+    Myio.print_table(str_countries, [str_wins])
   end
 
   defp unzip(kwlist), do: {Keyword.keys(kwlist), Keyword.values(kwlist)}

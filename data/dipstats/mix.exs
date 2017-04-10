@@ -29,8 +29,6 @@ defmodule Dipstats.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:explot, "~> 0.1.0"},
-      {:dataframe, "~> 0.1.0"},
       {:mariaex, "~> 0.7.3"},
       {:earmark, "~> 0.1"},
       {:ex_doc, "~> 0.11"}
