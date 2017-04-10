@@ -33,9 +33,13 @@ defmodule Dipstats do
   Prints the mean, median, mode, and standard deviation for game length.
   """
   def print_game_lengths do
-    %{mean: mean, median: median, mode: mode, stdev: stdev} =
+    values =
         Database.sql_games("WHERE num_players=7")
         |> Stream.map(&(&1.num_turns))
         |> Stats.mean_median_mode_stdev
+        |> Map.to_list
+        |> Enum.map(fn({name, val}) -> {Atom.to_string(name), (if (is_float(val)), do: Float.to_string(val), else: Integer.to_string(val))} end)
+        |> Enum.map(&Tuple.to_list/1)
+    Myio.print_table(["Statistic", "Value"], values)
   end
 end

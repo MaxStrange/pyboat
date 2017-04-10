@@ -52,6 +52,7 @@ defmodule Myio do
     [row | rest] = rows
     print_row(row, longests)
     print_n_times("-", Enum.sum(longests) + 5 * length(longests) - 2)
+    IO.puts ""
     print_rest(rest, longests)
   end
 
