@@ -4,10 +4,10 @@ This module is the database accessor. It executes the requested SQL statement an
 The data that it returns via the Stream module is wrapped up in a map.
 """
 
-  @doc """
+  @doc ~S"""
   Executes the given WHERE statements as if they were SELECT * from players WHERE ...
 
-  ## Examples TODO
+  ## Examples
 
       iex> Database.sql_players("WHERE game_id=123458 AND won=1") |> Enum.to_list
       [%Player{country: "G", eliminated: 0, end_turn: 29, game_id: 123458, num_scs: 13, start_turn: 1, won: 1}]

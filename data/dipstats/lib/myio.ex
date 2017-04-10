@@ -4,7 +4,7 @@ defmodule Myio do
   maybe communicating with external processes, such as python for matplotlib.
   """
 
-  @doc """
+  @doc ~S"""
   Prints the given data as a prettily-formatted table to standard output.
   You must supply all data as a string. This will not convert the data to string representation for you.
 
@@ -33,7 +33,7 @@ defmodule Myio do
     by_row
     |> List.zip
     |> Enum.map(&Tuple.to_list/1)
-    |> Enum.map(fn(ls) -> Enum.reduce(ls, 0, fn(x, acc) -> acc = if (String.length(x) > acc), do: String.length(x), else: acc end) end)
+    |> Enum.map(fn(ls) -> Enum.reduce(ls, 0, fn(x, acc) -> _acc = if (String.length(x) > acc), do: String.length(x), else: acc end) end)
   end
 
   defp print_table_content(column_names, rows, longests) do
@@ -43,7 +43,7 @@ defmodule Myio do
 
   defp print_header(column_names, longests) do
     print_row(column_names, longests)
-    print_n_times("=", Enum.sum(longests) + 5 * length(longests) - 3)
+    print_n_times("=", Enum.sum(longests) + 5 * length(longests) - 2)
     IO.puts ""
   end
 
@@ -51,7 +51,7 @@ defmodule Myio do
   defp print_rest(rows, longests) do
     [row | rest] = rows
     print_row(row, longests)
-    print_n_times("-", Enum.sum(longests) + 5 * length(longests) - 3)
+    print_n_times("-", Enum.sum(longests) + 5 * length(longests) - 2)
     print_rest(rest, longests)
   end
 
@@ -60,7 +60,7 @@ defmodule Myio do
     [s | rest_of_row] = row
     [n | rest_of_longests] = longests
     IO.write s
-    times_to_print = if (n - String.length(s) > 0), do: (n - String.length(s)), else: 0
+    times_to_print = if (n - String.length(s) > 0), do: (n - String.length(s)) + 2, else: 2
     print_n_times(" ", times_to_print)
     IO.write "|  "
     print_row(rest_of_row, rest_of_longests)

@@ -4,7 +4,7 @@ defmodule Dipstats do
   the data in the Diplomacy dataset. Really this is just a fun way for me to learn Elixir.
   """
 
-  @doc """
+  @doc ~S"""
   Runs the entire statistics suite over the database.
 
   ## Examples
