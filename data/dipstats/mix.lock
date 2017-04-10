@@ -13,6 +13,8 @@
   "mariaex": {:hex, :mariaex, "0.7.9", "52f837cf1b0717f95a0e62624bb99707329cba599885cf3bd2fdecc0172a98ad", [:mix], [{:db_connection, "~> 1.0.0-rc", [hex: :db_connection, optional: false]}, {:decimal, "~> 1.0", [hex: :decimal, optional: false]}]},
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], []},
   "mimerl": {:hex, :mimerl, "1.0.2", "993f9b0e084083405ed8252b99460c4f0563e41729ab42d9074fd5e52439be88", [:rebar3], []},
+  "printex": {:hex, :printex, "0.1.2", "eb9a55403dcc894183c62e5655e1ed789cf7b087b6b035ccfcee188461c3fb59", [:mix], []},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [:make, :rebar], []},
   "timex": {:hex, :timex, "3.1.13", "48b33162e3ec33e9a08fb5f98e3f3c19c3e328dded3156096c1969b77d33eef0", [:mix], [{:combine, "~> 0.7", [hex: :combine, optional: false]}, {:gettext, "~> 0.10", [hex: :gettext, optional: false]}, {:tzdata, "~> 0.1.8 or ~> 0.5", [hex: :tzdata, optional: false]}]},
+  "typex": {:hex, :typex, "0.1.0", "608de876a0db31459c6524d2ba4d3af1295f8477512deca317ae18b1c3d60ce1", [:mix], []},
   "tzdata": {:hex, :tzdata, "0.5.11", "3d5469a9f46bdf4a8760333dbdabdcc4751325035c454b10521f71e7c611ae50", [:mix], [{:hackney, "~> 1.0", [hex: :hackney, optional: false]}]}}

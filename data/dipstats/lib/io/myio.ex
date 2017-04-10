@@ -10,7 +10,10 @@ defmodule Myio do
 
   ## Examples
 
-      iex> Myio.print_table(["Name", "ID", "Happy?"], [["John", "5", "Yes"], ["Mary", "2", "No"]])
+      iex> Myio.print_table([["John", "5", "Yes"], ["Mary", "2", "No"]], ["Name", "ID", "Happy?"], "PEOPLE")
+      ========================
+      |        PEOPLE        |
+      ========================
       Name  |  ID  |  Happy?
       ========================
       John  |  5   |  Yes
@@ -18,11 +21,11 @@ defmodule Myio do
       Mary  |  2   |  No
       ------------------------
   """
-  def print_table(column_names, rows) do
+  def print_table(rows, column_names, title) do
     cond do
       Enum.all?(rows, &(length(&1) == length(column_names))) ->
         longests = calculate_table_longests [column_names | rows]
-        print_table_content(column_names, rows, longests)
+        print_table_content(column_names, rows, longests, title)
       true ->
         raise ArgumentError, "Each row must be the same length as number of columns."
     end
@@ -36,9 +39,37 @@ defmodule Myio do
     |> Enum.map(fn(ls) -> Enum.reduce(ls, 0, fn(x, acc) -> _acc = if (String.length(x) > acc), do: String.length(x), else: acc end) end)
   end
 
-  defp print_table_content(column_names, rows, longests) do
+  defp print_table_content(column_names, rows, longests, title) do
+    print_title(title, longests)
     print_header(column_names, longests)
     print_rest(rows, longests)
+  end
+
+  defp print_title(title, longests) do
+    table_length = Enum.sum(longests) + 5 * length(longests) - 2
+    print_n_times("=", table_length)
+    IO.puts ""
+    IO.write "|"
+    color_title = IO.ANSI.format([:blue, :bright, title], true)
+    total_pad = (table_length - String.length(title)) - 2
+    case total_pad do
+      total_pad when total_pad <= 0 ->
+        IO.write "  "
+        IO.write color_title
+        IO.write "  "
+      total_pad when rem(total_pad, 2) == 0 ->
+        print_n_times(" ", round(total_pad / 2))
+        IO.write color_title
+        print_n_times(" ", round(total_pad / 2))
+      total_pad when rem(total_pad, 2) == 1 ->
+        print_n_times(" ", round(total_pad / 2) - 1)
+        IO.write color_title
+        print_n_times(" ", round(total_pad / 2))
+    end
+    IO.write "|"
+    IO.puts ""
+    print_n_times("=", table_length)
+    IO.puts ""
   end
 
   defp print_header(column_names, longests) do
