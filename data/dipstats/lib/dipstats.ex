@@ -33,7 +33,7 @@ defmodule Dipstats do
   Prints the mean, median, mode, and standard deviation for game length.
   """
   def print_game_lengths do
-    {mean, median, mode, sd} =
+    %{mean: mean, median: median, mode: mode, stdev: stdev} =
         Database.sql_games("WHERE num_players=7")
         |> Stream.map(&(&1.num_turns))
         |> Stats.mean_median_mode_stdev

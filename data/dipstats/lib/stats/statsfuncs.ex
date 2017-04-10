@@ -46,7 +46,13 @@ defmodule Statsfuncs do
   defp do_median([]), do: nil
   defp do_median([val]), do: val
   defp do_median([l, r]), do: (l + r) / 2
-  defp do_median([_, middle, _]), do: do_median middle
+  defp do_median(items) do
+    items
+    |> Stream.drop(1)
+    |> Stream.drop(-1)
+    |> Enum.to_list
+    |> do_median
+  end
 
   @doc """
   Calculates the mode of the given enumerable. If there is no mode (i.e., all elements of the enumerable
@@ -63,7 +69,7 @@ defmodule Statsfuncs do
       iex> Statsfuncs.mode []
       nil
 
-      iex> Statsfuncs.mod [1, 1, 2, 2]
+      iex> Statsfuncs.mode [1, 1, 2, 2]
       nil
   """
   def mode([]), do: nil
@@ -84,18 +90,41 @@ defmodule Statsfuncs do
     more_than_one_largest? =
         chunked
         |> Enum.map(&(length(&1)))
+        |> Enum.filter(&(&1 != largest_num_common_items))
         |> unique?
 
     if more_than_one_largest? do
       nil
     else
       # If there isn't, return the value of the elements in the largest chunk
-      largest_chunk = chunked |> Enum.sort(&(length(&1) >= length(&2))) |> Enum.fetch(0)
-      Enum.fetch(largest_chunk, 0)
+      largest_chunk = chunked |> Enum.sort(&(length(&1) >= length(&2))) |> Enum.fetch!(0)
+      Enum.fetch!(largest_chunk, 0)
     end
   end
 
   defp unique?(items) do
     length(items) == length(Enum.uniq items)
+  end
+
+  @doc """
+  Calculates the SAMPLE standard deviation for the given enumerable.
+
+  ## Examples
+
+      iex> Statsfuncs.stdev 1..3
+      1.0
+
+      iex> Statsfuncs.stdev [1, 2, 3, 3, 3]
+      0.8944271909999159
+
+      iex> Statsfuncs.stdev []
+      nil
+  """
+  def stdev([]), do: nil
+  def stdev(items) do
+    mu = mean items
+    n = length(Enum.to_list(items))
+    ss = items |> Enum.map(fn(x) -> (x - mu) * (x - mu) end) |> Enum.sum
+    :math.sqrt((1 / (n - 1)) * ss)
   end
 end

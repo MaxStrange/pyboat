@@ -56,21 +56,21 @@ defmodule Stats do
   """
   def mean_median_mode_stdev(stream) do
     mypid = self()
-    spawn(fn -> send(mypid, Statsfuncs.mean(mypid, Stream.take_every(stream, 1))) end)
-    spawn(fn -> send(mypid, Statsfuncs.median(mypid, Stream.take_every(stream, 1))) end)
-    spawn(fn -> send(mypid, Statsfuncs.mode(mypid, Stream.take_every(stream, 1))) end)
-    spawn(fn -> send(mypid, Statsfuncs.stdev(mypid, Stream.take_every(stream, 1))) end)
+    spawn(fn -> send(mypid, {:mean, Statsfuncs.mean(Stream.take_every(stream, 1))}) end)
+    spawn(fn -> send(mypid, {:median, Statsfuncs.median(Stream.take_every(stream, 1))}) end)
+    spawn(fn -> send(mypid, {:mode, Statsfuncs.mode(Stream.take_every(stream, 1))}) end)
+    spawn(fn -> send(mypid, {:stdev, Statsfuncs.stdev(Stream.take_every(stream, 1))}) end)
 
     recv_mean_median_mode_stdev()
   end
 
-  defp recv_mean_median_mode_stdev, do: do_recv_mmms []
-  defp do_recv_mmms(acc) when length(acc) != 4 do
+  defp recv_mean_median_mode_stdev, do: do_recv_mmms %{}
+  defp do_recv_mmms(acc) when map_size(acc) != 4 do
     receive do
-      {:mean, mean}     -> do_recv_mmms [acc | mean]
-      {:median, median} -> do_recv_mmms [acc | median]
-      {:mode, mode}     -> do_recv_mmms [acc | mode]
-      {:stdev, stdev}   -> do_recv_mmms [acc | stdev]
+      {:mean, mean}     -> do_recv_mmms Map.put(acc, :mean, mean)
+      {:median, median} -> do_recv_mmms Map.put(acc, :median, median)
+      {:mode, mode}     -> do_recv_mmms Map.put(acc, :mode, mode)
+      {:stdev, stdev}   -> do_recv_mmms Map.put(acc, :stdev, stdev)
     end
   end
   defp do_recv_mmms(acc), do: acc
