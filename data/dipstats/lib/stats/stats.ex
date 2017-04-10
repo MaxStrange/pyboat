@@ -6,7 +6,7 @@ defmodule Stats do
   @countries ["E", "A", "F", "G", "R", "I", "T"]
 
   @doc """
-  Sorts the given stream of players by most wins to least wins and returns some useful information along with it.
+  Sorts the given stream of players by most wins to least wins.
   """
   def sort_by_wins(stream) do
     ## Copy the stream into seven different processes, each of which sums their country's wins.
@@ -42,4 +42,36 @@ defmodule Stats do
     end
   end
   defp do_recv_wins(acc), do: acc
+
+  @doc """
+  Computes the mean, median, and mode on the given stream or enumerable.
+
+  ## Examples
+
+      iex> Stats.mean_median_mode_stdev(1..10)
+      {5.5, 5.5, nil, 3.0276503540974917}
+
+      iex> Stats.mean_median_mode_stdev([5, 5, 5])
+      {5, 5, 5, 0.0}
+  """
+  def mean_median_mode_stdev(stream) do
+    mypid = self()
+    spawn(fn -> send(mypid, Statsfuncs.mean(mypid, Stream.take_every(stream, 1))) end)
+    spawn(fn -> send(mypid, Statsfuncs.median(mypid, Stream.take_every(stream, 1))) end)
+    spawn(fn -> send(mypid, Statsfuncs.mode(mypid, Stream.take_every(stream, 1))) end)
+    spawn(fn -> send(mypid, Statsfuncs.stdev(mypid, Stream.take_every(stream, 1))) end)
+
+    recv_mean_median_mode_stdev()
+  end
+
+  defp recv_mean_median_mode_stdev, do: do_recv_mmms []
+  defp do_recv_mmms(acc) when length(acc) != 4 do
+    receive do
+      {:mean, mean}     -> do_recv_mmms [acc | mean]
+      {:median, median} -> do_recv_mmms [acc | median]
+      {:mode, mode}     -> do_recv_mmms [acc | mode]
+      {:stdev, stdev}   -> do_recv_mmms [acc | stdev]
+    end
+  end
+  defp do_recv_mmms(acc), do: acc
 end

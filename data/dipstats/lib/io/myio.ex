@@ -11,11 +11,11 @@ defmodule Myio do
   ## Examples
 
       iex> Myio.print_table(["Name", "ID", "Happy?"], [["John", "5", "Yes"], ["Mary", "2", "No"]])
-      Name  |  ID  |  Happy?  
+      Name  |  ID  |  Happy?
       ========================
-      John  |  5   |  Yes     
+      John  |  5   |  Yes
       ------------------------
-      Mary  |  2   |  No      
+      Mary  |  2   |  No
       ------------------------
   """
   def print_table(column_names, rows) do

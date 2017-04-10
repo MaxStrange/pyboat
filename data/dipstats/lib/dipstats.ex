@@ -4,21 +4,17 @@ defmodule Dipstats do
   the data in the Diplomacy dataset. Really this is just a fun way for me to learn Elixir.
   """
 
-  @doc ~S"""
+  @doc """
   Runs the entire statistics suite over the database.
-
-  ## Examples
-
-      iex> Dipstats.stats
-      :ok
-
   """
   def stats do
-    :ok
+    IO.puts "=====================WINNERS=================="
+    print_winners()
+    IO.puts "=============================================="
   end
 
   @doc """
-  Prints the country names in order of who is most likely to win, along with some frequentist statistics for them.
+  Prints the country names in order of who is most likely to win.
   """
   def print_winners do
     {countries, wins} =
@@ -32,4 +28,14 @@ defmodule Dipstats do
   end
 
   defp unzip(kwlist), do: {Keyword.keys(kwlist), Keyword.values(kwlist)}
+
+  @doc """
+  Prints the mean, median, mode, and standard deviation for game length.
+  """
+  def print_game_lengths do
+    {mean, median, mode, sd} =
+        Database.sql_games("WHERE num_players=7")
+        |> Stream.map(&(&1.num_turns))
+        |> Stats.mean_median_mode_stdev
+  end
 end

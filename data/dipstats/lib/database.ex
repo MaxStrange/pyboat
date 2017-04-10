@@ -24,4 +24,23 @@ The data that it returns via the Stream module is wrapped up in a map.
     %Player{game_id: game_id, country: country, won: won, num_scs: num_scs, eliminated: eliminated, start_turn: start_turn, end_turn: end_turn}
   end
 
+  @doc ~S"""
+  Executes the given WHERE statements as if they were SELECT * FROM games WHERE ...
+
+  ## Examples
+
+      iex> Database.sql_games("WHERE id=123458") |> Enum.to_list
+      [%Game{id: 123458, num_players: 7, num_turns: 32}]
+
+  """
+  def sql_games(sql) do
+    {:ok, pid} = Mariaex.start_link(username: "root", database: "diplomacy")
+    {:ok, result} = Mariaex.query(pid, "SELECT * FROM games " <> sql)
+    Stream.take_every(result.rows, 1)
+    |> Stream.map(&(arrange_data_game(&1)))
+  end
+
+  defp arrange_data_game([id, num_turns, num_players]) do
+    %Game{id: id, num_turns: num_turns, num_players: num_players}
+  end
 end
