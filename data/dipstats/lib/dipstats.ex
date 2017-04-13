@@ -76,9 +76,10 @@ defmodule Dipstats do
     letter = country |> Atom.to_string |> String.first |> String.upcase
     Database.sql_games("INNER JOIN players ON games.id=players.game_id WHERE country='" <> letter <> "' AND eliminated=1 AND games.num_players=7", :no_struct)
     |> Stream.map(&(&1.end_turn))
+    |> Enum.to_list
+    |> Plot.hist(bins: 100)
     |> Stats.mean_median_mode_stdev
     |> Map.to_list
-    |> Plot.hist
     |> Enum.map(fn({name, val}) -> {Atom.to_string(name), (if (is_float(val)), do: Float.to_string(val), else: Integer.to_string(val))} end)
     |> Enum.map(&Tuple.to_list/1)
     |> Myio.print_table(["Statistic", "Value"], "NUM TURNS BEFORE ELIM")
