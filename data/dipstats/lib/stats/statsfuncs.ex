@@ -14,6 +14,12 @@ defmodule Statsfuncs do
       iex> Statsfuncs.mean []
       nil
 
+      iex> Statsfuncs.mean 1..2
+      1.5
+
+      iex> Statsfuncs.mean [1]
+      1.0
+
   """
   def mean([]), do: nil
   def mean(items) do
@@ -38,9 +44,15 @@ defmodule Statsfuncs do
 
       iex> Statsfuncs.median []
       nil
+
+      iex> Statsfuncs.median 1..2
+      1.5
+
+      iex> Statsfuncs.median [1]
+      1
   """
   def median(items) do
-    do_median(items)
+    items |> Enum.to_list |> do_median
   end
 
   defp do_median([]), do: nil

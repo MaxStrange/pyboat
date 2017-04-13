@@ -29,7 +29,9 @@ defmodule Dipstats.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
+      {:expyplot, git: "https://github.com/MaxStrange/expyplot.git"},
       {:mariaex, "~> 0.7.3"},
+      {:statistics, "~> 0.4.1"},
       {:earmark, "~> 0.1"},
       {:ex_doc, "~> 0.11"}
     ]
