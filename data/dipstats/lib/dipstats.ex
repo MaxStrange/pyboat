@@ -42,6 +42,16 @@ defmodule Dipstats do
     |> Enum.map(fn({name, val}) -> {Atom.to_string(name), (if (is_float(val)), do: Float.to_string(val), else: Integer.to_string(val))} end)
     |> Enum.map(&Tuple.to_list/1)
     |> Myio.print_table(["Statistic", "Value"], "GAME LENGTHS")
+
+    Database.sql_games("WHERE num_players=7")
+    |> Stream.map(&(&1.num_turns))
+    |> Enum.to_list
+    |> Plot.hist(bins: 100)
+
+    Plot.title("Number of turns")
+    Plot.xlabel("Number of turns")
+    Plot.ylabel("Number of games")
+    Plot.show()
   end
 
   @doc """
@@ -74,16 +84,19 @@ defmodule Dipstats do
   end
   def lifespan(country) do
     letter = country |> Atom.to_string |> String.first |> String.upcase
-    Database.sql_games("INNER JOIN players ON games.id=players.game_id WHERE country='" <> letter <> "' AND eliminated=1 AND games.num_players=7", :no_struct)
-    |> Stream.map(&(&1.end_turn))
-    |> Enum.to_list
-    |> Plot.hist(bins: 100)
+    stats =
+        Database.sql_games("INNER JOIN players ON games.id=players.game_id WHERE country='" <> letter <> "' AND eliminated=1 AND games.num_players=7", :no_struct)
+        |> Stream.map(&(&1.end_turn))
+        |> Enum.to_list
+
+    stats
     |> Stats.mean_median_mode_stdev
     |> Map.to_list
     |> Enum.map(fn({name, val}) -> {Atom.to_string(name), (if (is_float(val)), do: Float.to_string(val), else: Integer.to_string(val))} end)
     |> Enum.map(&Tuple.to_list/1)
     |> Myio.print_table(["Statistic", "Value"], "NUM TURNS BEFORE ELIM")
 
+    Plot.hist(stats, bins: 100)
     Plot.show()
   end
 end
