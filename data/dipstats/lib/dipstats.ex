@@ -99,4 +99,23 @@ defmodule Dipstats do
     Plot.hist(stats, bins: 100)
     Plot.show()
   end
+
+  @doc """
+  Graphs the typical number of SCs each country has given that the selected country won over the course of the game.
+  The idea is that this will give a typical example of what a game looks like for England, given that France wins (for example).
+  It will begin to answer the question, what should I do as country X in order to have the best possible chance to win?
+  """
+  def typical_win(country) when not country in @countries do
+    IO.puts "Need one of:"
+    IO.inspect @countries
+  end
+  def typical_win(country) do
+    # get all turns from all games where country won
+    letter = country |> Atom.to_string |> String.first |> String.upcase
+    # Accumulate the turns into totals. Totals will look like this: %{austria: %{<turn number>: {<sum_SCs>, <num_turns_at_this_number>}}, england: etc.}
+    totals =
+        Database.sql_games("INNER JOIN players ON games.id=players.game_id INNER JOIN turns ON games.id=turns.game_id WHERE country='" <> letter <> "' AND won=1 AND num_players=7", :no_struct)
+        #TODO
+  end
 end
+
