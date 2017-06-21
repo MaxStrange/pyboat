@@ -5,6 +5,7 @@ import copy
 
 convoying_armies = []
 all_combat_lists = {}
+convoy_succeeded_list = []
 
 def adjudicate(gamestate):
     """
@@ -16,12 +17,22 @@ def adjudicate(gamestate):
     _mark_all_invalid_convoy_orders(nextstate)
     _mark_all_invalid_move_and_support_orders(nextstate)
     _calculate_initial_combat_strengths(nextstate)
-    _mark_support_cuts_made_by_convoyers_and_mark_endangered_convoys(nextstate)
-    _mark_convoy_disruptions_and_support_cuts_made_by_successful_convoys(nextstate)
-    _mark_bounces_caused_by_inability_to_swap_places(nextstate)
-    _mark_bounces_suffered_by_understrength_attackers(nextstate)
-    _mark_bounces_caused_by_inability_to_self_dislodge(nextstate)
-    _mark_supports_cut_by_dislodgements(nextstate)
+    convoy_succeeded_list_grew = True
+    while convoy_succeeded_list_grew:
+        _mark_support_cuts_made_by_convoyers_and_mark_endangered_convoys(nextstate)
+        convoy_succeeded_list_grew = _mark_convoy_disruptions_and_support_cuts_made_by_successful_convoys(nextstate)
+    bounced = True
+    while bounced:
+        bounced = _mark_bounces_caused_by_inability_to_swap_places(nextstate)
+        if bounced:
+            continue
+        bounced = _mark_bounces_suffered_by_understrength_attackers(nextstate)
+        if bounced:
+            continue
+        bounced = _mark_bounces_caused_by_inability_to_self_dislodge(nextstate)
+        if bounced:
+            continue
+        _mark_supports_cut_by_dislodgements(nextstate)
     _move_units_that_did_not_bounce(nextstate)
     reset_global_variables()
     return nextstate
@@ -72,21 +83,61 @@ def _calculate_initial_combat_strengths(s):
         all_combat_lists[space.province_name] = [u for u in s.units_trying_to_move_to_or_remain_in(space)]
 
 def _mark_support_cuts_made_by_convoyers_and_mark_endangered_convoys(s):
-    for army in convoying_armies:
-        _check_disruptions(
-    # TODO
+    global convoy_succeeded_list
+    convoy_succeeded_list_grew = True
+    while convoy_succeeded_list_grew:
+        convoy_succeeded_list_grew = False
+        for army in convoying_armies:
+            _check_disruptions(army, s.fleet_convoying_army(army), s)
+            if not army.order.mark:
+                _cut_support(army, s)
+                convoy_succeeded_list.append(army)
+                convoy_succeeded_list_grew = True
+            else if army.order.mark == "convoy endangered":
+                army.order.mark = "convoy under attack"
 
 def _mark_convoy_disruptions_and_support_cuts_made_by_successful_convoys(s):
-    pass
+    grew = False
+    for army in convoying_armies:
+        _check_disruptions(army, s.fleet_convoying_army, s)
+        if army.order.mark == "convoy endangered":
+            army.order.mark = "no convoy"
+            army.support_count = 0
+            for supporter in s.units_supporting_unit(army):
+                supporter.order.mark = "no convoy"
+        elif army.order.mark == "convoy under attack":
+            army.order.mark = ""
+            _cut_support(army, s)
+            convoy_succeeded_list.append(army)
+            grew = True
+    return grew
 
 def _mark_bounces_caused_by_inability_to_swap_places(s):
-    pass
+    bounced = False
+    for unit in s.all_moving_units_not_convoying_whose_orders_are_not_marked():
+        dest_unit = unit.order.destination.unit
+        if dest_unit and dest_unit.order.mark == "" and dest_unit.order.destination == unit.location and not s.unit_is_being_convoyed(dest_unit):
+            swapper = dest_unit
+            if swapper.owner == unit.owner or unit.support_count - len(unit.no_help) <= swapper.support_count:
+                _bounce(unit, s)
+                bounced = True
+            if swapper.owner == unit.owner or swapper.support_count - len(swapper.no_help) <= unit.support_count:
+                _bounce(swapper, s)
+                bounced = True
+    return bounced
 
 def _mark_bounces_suffered_by_understrength_attackers(s):
-    pass
+    bounced = False
+    for space in s.all_spaces:
+        for unit in all_combat_lists[space]:
+            if s.unit_does_not_have_greater_support_count_than_every_other_unit_in(unit, space) and unit.order.order_type == "move" and unit.order.mark == "":
+                _bounce(unit, s)
+                bounced = True
+    return bounced
 
 def _mark_bounces_caused_by_inability_to_self_dislodge(s):
-    pass
+    bounced = False
+    # TODO
 
 def _mark_supports_cut_by_dislodgements(s):
     # TODO: Note: this is step nine, so _cut_support must be called with step_nine=True
@@ -121,4 +172,14 @@ def _cut_support(unit, s, step_nine=False):
         occupier.order.mark = "cut"
         occupier.order.supported_unit.supports -= 1
         occupier.order.supported_unit.remove_from_no_help(occupier)
+
+def _check_disruptions(convoying_army, fleet, s):
+    """
+    Takes a convoying army
+    """
+    space = fleet.space
+    combat_list = all_combat_lists[space]
+    unit_has_higher_support_than_all_others = True # TODO
+    if len(combat_list) == 1 and unit_has_higher_support_than_all_others and single_unit.owner is not fleet.owner:
+        convoying_army.order.mark = "convoy endangered"
 
