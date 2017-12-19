@@ -33,9 +33,8 @@ The 'num_players' field is how many players were still actively inputting units 
 
 ### orders
 
-+-------------+------------------+------+-----+---------+-------+
 | Field       | Type             | Null | Key | Default | Extra |
-+-------------+------------------+------+-----+---------+-------+
+|-------------|------------------|------|-----|---------|-------|
 | game_id     | int(10) unsigned | NO   | MUL | NULL    |       |
 | unit_id     | int(10) unsigned | NO   | MUL | NULL    |       |
 | unit_order  | varchar(10)      | NO   |     | NULL    |       |
@@ -53,14 +52,11 @@ The 'orders' table contains the following columns:
 * unit_order: The actual order
 * location: The location of the unit at the start of the turn (their origin)
 * target: If the order takes a unit as a target, the location where that unit was to be found
-* target_dest: If the order is a SUPPORT order, the target_dest is either a) target, in which case it is a SUPPORT
-* HOLD (e.g. Fleet North Sea supports Army Belgium to hold) or b) a location name different from target, in which case
+* target_dest: If the order is a SUPPORT order, the target_dest is either a) target, in which case it is a SUPPORT HOLD (e.g. Fleet North Sea supports Army Belgium to hold) or b) a location name different from target, in which case
 * is a SUPPORT to MOVE (e.g. F Black Sea supports A Bulgaria move to Rumania)
 * success: 1 = TRUE, 0 = FALSE. If FALSE, there should be a reason.
-* reason: NULL unless success = 0. If Non-NULL, contains a reason for the failure of the order, such as
-destroyed by A Rumania - Bulgaria' or 'Attack broken by F English Channel - Belgium' or 'Bounced'
-* turn_num: Which turn this order was written for: starts at 1, which indicates that the order was written to be carried
-out in Spring 1901 (the first order resolution phase of the game)
+* reason: NULL unless success = 0. If Non-NULL, contains a reason for the failure of the order, such as destroyed by A Rumania - Bulgaria' or 'Attack broken by F English Channel - Belgium' or 'Bounced'
+* turn_num: Which turn this order was written for: starts at 1, which indicates that the order was written to be carried out in Spring 1901 (the first order resolution phase of the game)
 
 A little more explanation for some of these:
 
