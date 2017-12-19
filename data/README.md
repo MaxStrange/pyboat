@@ -15,14 +15,11 @@ in-depth description of each one.
 
 ### games
 
-+-------------+------------------+------+-----+---------+-------+
 | Field       | Type             | Null | Key | Default | Extra |
-+-------------+------------------+------+-----+---------+-------+
+|-------------|------------------|------|-----|---------|-------|
 | id          | int(10) unsigned | NO   | PRI | NULL    |       |
 | num_turns   | int(10) unsigned | NO   |     | NULL    |       |
 | num_players | int(10) unsigned | NO   |     | NULL    |       |
-+-------------+------------------+------+-----+---------+-------+
-
 
 The 'games' table contains three columns: id, num_turns, num_players. The 'id' field
 is a unique unsigned int that is used as the primary key for all the games.
@@ -44,7 +41,6 @@ The 'num_players' field is how many players were still actively inputting units 
 | success     | tinyint(1)       | NO   |     | NULL    |       |
 | reason      | varchar(255)     | YES  |     | NULL    |       |
 | turn_num    | int(10) unsigned | NO   |     | NULL    |       |
-+-------------+------------------+------+-----+---------+-------+
 
 The 'orders' table contains the following columns:
 * game_id: The 'id' from the 'games' table that identifies which game this order is from
@@ -76,9 +72,8 @@ Possible values for 'unit_order' are:
 
 Possible values for 'location', 'target', and 'target_dest' are:
 
-+------------------------------+
 | location                     |
-+------------------------------+
+|------------------------------|
 | Edinburgh                    |
 | Liverpool                    |
 | London                       |
@@ -161,15 +156,13 @@ Possible values for 'location', 'target', and 'target_dest' are:
 | Spain (South Coast)          |
 | Bulgaria (South Coast)       |
 | Bulgaria (East Coast)        |
-+------------------------------+
 
 Note that location can only be an empty string when the unit_order is BUILD.
 
 ### players
 
-+--------------------+------------------+------+-----+---------+-------+
 | Field              | Type             | Null | Key | Default | Extra |
-+--------------------+------------------+------+-----+---------+-------+
+|--------------------|------------------|------|-----|---------|-------|
 | game_id            | int(10) unsigned | NO   | MUL | NULL    |       |
 | country            | char(1)          | NO   |     | NULL    |       |
 | won                | tinyint(1)       | NO   |     | NULL    |       |
@@ -177,7 +170,6 @@ Note that location can only be an empty string when the unit_order is BUILD.
 | eliminated         | tinyint(1)       | NO   |     | NULL    |       |
 | start_turn         | int(10) unsigned | NO   |     | NULL    |       |
 | end_turn           | int(10) unsigned | NO   |     | NULL    |       |
-+--------------------+------------------+------+-----+---------+-------+
 
 * 'game_id' is the 'id' from the 'games' table that this player is from
 * 'country' is one of: {E, F, I, G, A, T, R} representing {England, France, Italy, Germany, Austria, Turkey, Russia}
@@ -189,9 +181,8 @@ Note that location can only be an empty string when the unit_order is BUILD.
 
 ### turns
 
-+-------------+------------------+------+-----+---------+-------+
 | Field       | Type             | Null | Key | Default | Extra |
-+-------------+------------------+------+-----+---------+-------+
+|-------------|------------------|------|-----|---------|-------|
 | game_id     | int(10) unsigned | NO   | MUL | NULL    |       |
 | turn_num    | int(10) unsigned | NO   |     | NULL    |       |
 | phase       | varchar(10)      | NO   |     | NULL    |       |
@@ -204,7 +195,6 @@ Note that location can only be an empty string when the unit_order is BUILD.
 | scs_turkey  | int(10) unsigned | NO   |     | NULL    |       |
 | scs_germany | int(10) unsigned | NO   |     | NULL    |       |
 | scs_austria | int(10) unsigned | NO   |     | NULL    |       |
-+-------------+------------------+------+-----+---------+-------+
 
 * game_id: The 'id' from the 'games' table
 * turn_num: An unsigned int unique for a given game_id, starting at 0 for each game; 0 (is Winter 1900 - no orders are executed on it)
@@ -215,16 +205,14 @@ Note that location can only be an empty string when the unit_order is BUILD.
 
 ### units
 
-+------------+------------------+------+-----+---------+-------+
 | Field      | Type             | Null | Key | Default | Extra |
-+------------+------------------+------+-----+---------+-------+
+|------------|------------------|------|-----|---------|-------|
 | game_id    | int(10) unsigned | NO   | MUL | NULL    |       |
 | country    | char(1)          | NO   |     | NULL    |       |
 | type       | char(1)          | NO   |     | NULL    |       |
 | start_turn | int(10) unsigned | NO   |     | NULL    |       |
 | end_turn   | int(10) unsigned | NO   |     | NULL    |       |
 | unit_id    | int(10) unsigned | NO   |     | NULL    |       |
-+------------+------------------+------+-----+---------+-------+
 
 * game_id: The 'id' from the 'games' table
 * country: One of: {E, F, I, G, A, T, R} representing {England, France, Italy, Germany, Austria, Turkey, Russia}; this is the owner of the unit
