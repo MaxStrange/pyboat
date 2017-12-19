@@ -92,3 +92,6 @@ ENV/
 
 # Mac OS X
 *.DS_Store
+
+# Secrets
+*.secrets
