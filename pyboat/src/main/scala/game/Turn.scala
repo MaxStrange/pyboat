@@ -16,7 +16,10 @@ case class Fall() extends SeasonType {}
  * It also provides a means by which to derive new turns using the database.
  */
 class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: Int, val season: SeasonType) {
-  var board = createStartingBoard()
+  var board: BoardState = null
+  if (turnNum == 0) {
+    board = createStartingBoard() // this constructs a new board through the database - avoid if possible
+  }
 
   override def toString() : String = {
     return "Turn " + turnNum + ": " + season + " " + phase + " " + year + " gID: " + gameId
@@ -54,20 +57,65 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     if (!Database.turnExists(gameId, turnNum))
       throw new NullPointerException("No turn with gameId: " + gameId + " and turnNum: " + turnNum)
 
+    println("Deriving new turn " + (turnNum + 1) + " from game ID " + gameId)
     val orders = Database.getOrdersForTurn(gameId, turnNum)
     var newTurn = Database.getTurn(gameId, turnNum + 1)
-    newTurn.copy(this)
+    newTurn.board = new BoardState(board.units, board.ownershipMatrix)
+    val livingUnitIds = collection.mutable.Set[Int]()
     for (o <- orders) {
+      println("Order: " + o)
       newTurn.applyOrder(o)
+      livingUnitIds += o.unitId
     }
+    board = new BoardState(board.units.filter(u => livingUnitIds.contains(u.unitId)), board.ownershipMatrix)
     return newTurn
   }
 
-  def copy(other : Turn) = {
-    // TODO: copy board state
+  def applyOrder(order : Order) = {
+    if (order.success) {
+      order.orderType match {
+        case Move() | Retreat() => applyMoveOrRetreatOrder(order)
+        case Hold() | Convoy() | Support() => applyHoldConvoyOrSupportOrder(order)
+        case Build() => applyBuildOrder(order)
+        case Destroy() => applyDestroyOrder(order)
+      }
+    }
   }
 
-  def applyOrder(order : Order) = {
-    // TODO: change board state according to the order if it succeeded
+  def applyMoveOrRetreatOrder(o : Order) = {
+    val u = board.getUnit(o.unitId)
+    val newLocation = o.target
+    val newU = new DipUnit(gameId, u.country, u.unitType, u.startTurn, u.endTurn, u.unitId, newLocation)
+    val newUnits = board.units.filter(un => un.unitId != u.unitId) ++ List(newU)
+
+    if (season == Fall()) {
+      val newMatrix = board.ownershipMatrix + (newU.location -> newU.country)
+      board = new BoardState(newUnits, newMatrix)
+    } else {
+      board = new BoardState(newUnits, board.ownershipMatrix)
+    }
+  }
+
+  def applyHoldConvoyOrSupportOrder(o : Order) = {
+    if (season == Fall()) {
+      val u = board.getUnit(o.unitId)
+      val newMatrix = board.ownershipMatrix + (u.location -> u.country)
+      board = new BoardState(board.units, newMatrix)
+    }
+  }
+
+  def applyBuildOrder(o : Order) = {
+    val u = Database.getUnit(gameId, o.unitId)
+    // Build order targets look like: "fleet London" rather than just "London", so chop off the first word
+    val orderTargetSplit = o.target.split(" ")
+    val location = orderTargetSplit.slice(1, orderTargetSplit.length).mkString(" ")
+    val newU = new DipUnit(gameId, u.country, u.unitType, u.startTurn, u.endTurn, u.unitId, location)
+    val newUnits = board.units ++ List(newU)
+    board = new BoardState(newUnits, board.ownershipMatrix)
+  }
+
+  def applyDestroyOrder(o : Order) = {
+    board = new BoardState(board.units.filter(u => u.unitId != o.unitId), board.ownershipMatrix)
   }
 }
+

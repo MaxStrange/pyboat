@@ -21,4 +21,17 @@ class Order(val gameId : Int, val unitId : Int, val orderType : OrderType,
     case r: Retreat => require(AllowedLocations.contains(location) && AllowedLocations.contains(target))
     case d: Destroy => require(AllowedLocations.contains(location))
   }
+
+  override def toString() : String = {
+    val str = orderType match {
+      case Move() => location + " MOVE to " + target + " ? " + success + ": " + reason
+      case Hold() => location + " HOLDs ? " + success + ": " + reason
+      case Convoy() => location + " CONVOY " + target + " to " + targetDest + " ? " + success + ": " + reason
+      case Support() => location + " SUPPORT " + target + " to " + targetDest + " ? " + success + ": " + reason
+      case Build() => " BUILD " + target + " ? " + success + ": " + reason
+      case Retreat() => location + " RETREAT to " + target + " ? " + success + ": " + reason
+      case Destroy() => location + " DESTROY ? " + success + ": " + reason
+    }
+    return "" + unitId + " " + str
+  }
 }

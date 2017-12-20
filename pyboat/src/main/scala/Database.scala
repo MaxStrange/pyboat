@@ -19,37 +19,59 @@ object Database {
     throw new IOException("Could not get the password from the password file.")
   }
 
+  /**
+   * Gets a DipUnit from the Database whose unitId and gameId are known.
+   *
+   * !! Note: The returned unit will have a non-sensical (likely null) location !!
+   */
+  def getUnit(gameId: Int, unitId: Int) : DipUnit = {
+    val sqlStatement = "SELECT * FROM units WHERE game_id=" + gameId + " AND unit_id=" + unitId
+    var (rs, connection) = query(sqlStatement)
+
+    rs.next()
+    val u = breakOutUnit(rs, connection, gameId)
+    connection.close()
+
+    return u
+  }
+
+  def breakOutUnit(rs: java.sql.ResultSet, connection: java.sql.Connection, gameId: Int) : DipUnit = {
+    val id = rs.getInt("game_id")
+    val country : CountryType = rs.getString("country").charAt(0) match {
+      case 'A' => Austria()
+      case 'E' => England()
+      case 'F' => France()
+      case 'G' => Germany()
+      case 'I' => Italy()
+      case 'R' => Russia()
+      case 'T' => Turkey()
+    }
+    val unitType : UnitType = rs.getString("type").charAt(0) match {
+      case 'A' => Army()
+      case 'F' => Fleet()
+    }
+    val startTurn = rs.getInt("start_turn")
+    val endTurn = rs.getInt("end_turn")
+    val unitId = rs.getInt("unit_id")
+
+    // Figure out where the unit is located by asking for its first order and retrieving location from that
+    // If this isn't a starting unit, this won't work and we will just let its location be null
+    val locationStat = "SELECT * FROM orders WHERE game_id=" + gameId + " AND unit_id=" + unitId + " AND turn_num=1"
+    //println(locationStat)
+    val lrs = connection.createStatement().executeQuery(locationStat)
+    val location = if (lrs.next()) lrs.getString("location") else null
+
+    val u = new DipUnit(gameId, country, unitType, startTurn, endTurn, unitId, location)
+    return u
+  }
+
   def getStartingUnits(gameId: Int, country: CountryType) : List[DipUnit] = {
     val sqlStatement = "SELECT * FROM units WHERE game_id=" + gameId + " AND country=\'" + country.code + "\' and start_turn=0"
     var (rs, connection) = query(sqlStatement)
 
     val buf = new ListBuffer[DipUnit]
     while (rs.next()) {
-      val id = rs.getInt("game_id")
-      val country : CountryType = rs.getString("country").charAt(0) match {
-        case 'A' => Austria()
-        case 'E' => England()
-        case 'F' => France()
-        case 'G' => Germany()
-        case 'I' => Italy()
-        case 'R' => Russia()
-        case 'T' => Turkey()
-      }
-      val unitType : UnitType = rs.getString("type").charAt(0) match {
-        case 'A' => Army()
-        case 'F' => Fleet()
-      }
-      val startTurn = rs.getInt("start_turn")
-      val endTurn = rs.getInt("end_turn")
-      val unitId = rs.getInt("unit_id")
-
-      // Figure out where the unit is located by asking for its first order and retrieving location from that
-      val locationStat = "SELECT * FROM orders WHERE game_id=" + gameId + " AND unit_id=" + unitId + " AND turn_num=1"
-      val lrs = connection.createStatement().executeQuery(locationStat)
-      lrs.next()
-      val location = lrs.getString("location")
-
-      var u = new DipUnit(gameId, country, unitType, startTurn, endTurn, unitId, location)
+      val u = breakOutUnit(rs, connection, gameId)
       buf += u
     }
     connection.close()
@@ -146,6 +168,7 @@ object Database {
    * Don't forget to close the connection!
    */
   def query(sqlStatement: String) : (java.sql.ResultSet, Connection) = {
+    //println(sqlStatement)
     var connection : Connection = null
     Class.forName(driver)
     connection = DriverManager.getConnection(url, username, password)
