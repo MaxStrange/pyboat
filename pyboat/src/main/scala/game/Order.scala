@@ -9,7 +9,7 @@ case class Destroy() extends OrderType {}
 
 class Order(val gameId : Int, val unitId : Int, val orderType : OrderType,
             val location : String, val target : String, val targetDest : String,
-            val success : Bool, val reason : String, val turnNum : Int) {
+            val success : Boolean, val reason : String, val turnNum : Int) {
   orderType match {
     case m: Move => require(AllowedLocations.contains(location) && AllowedLocations.contains(target))
     case h: Hold => require(AllowedLocations.contains(location))
@@ -18,7 +18,7 @@ class Order(val gameId : Int, val unitId : Int, val orderType : OrderType,
     case s: Support => require(AllowedLocations.contains(location) && AllowedLocations.contains(target)
                               && AllowedLocations.contains(targetDest))
     case b: Build => ;
-    case r: Retreate => require(AllowedLocations.contains(location) && AllowedLocations.contains(target))
+    case r: Retreat => require(AllowedLocations.contains(location) && AllowedLocations.contains(target))
     case d: Destroy => require(AllowedLocations.contains(location))
   }
 }

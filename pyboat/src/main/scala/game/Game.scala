@@ -11,7 +11,7 @@ class Game(val gameId: Int) {
 
   var lb = new ListBuffer[Turn]()
   var turn = Database.getTurn(gameId, 0)
-  for (i <- 1 until numTurns) {
+  for (i <- 1 until numTurns - 1) {
     turn = turn.deriveNext()
     lb += turn
   }

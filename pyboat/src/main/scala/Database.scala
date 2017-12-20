@@ -1,3 +1,4 @@
+import scala.collection.mutable.ListBuffer
 import java.sql.DriverManager
 import java.sql.Connection
 import scala.io.Source
@@ -16,6 +17,44 @@ object Database {
       }
     }
     throw new IOException("Could not get the password from the password file.")
+  }
+
+  def getStartingUnits(gameId: Int, country: CountryType) : List[DipUnit] = {
+    val sqlStatement = "SELECT * FROM units WHERE game_id=" + gameId + " AND country=\'" + country.code + "\' and start_turn=0"
+    var (rs, connection) = query(sqlStatement)
+
+    val buf = new ListBuffer[DipUnit]
+    while (rs.next()) {
+      val id = rs.getInt("game_id")
+      val country : CountryType = rs.getString("country").charAt(0) match {
+        case 'A' => Austria()
+        case 'E' => England()
+        case 'F' => France()
+        case 'G' => Germany()
+        case 'I' => Italy()
+        case 'R' => Russia()
+        case 'T' => Turkey()
+      }
+      val unitType : UnitType = rs.getString("type").charAt(0) match {
+        case 'A' => Army()
+        case 'F' => Fleet()
+      }
+      val startTurn = rs.getInt("start_turn")
+      val endTurn = rs.getInt("end_turn")
+      val unitId = rs.getInt("unit_id")
+
+      // Figure out where the unit is located by asking for its first order and retrieving location from that
+      val locationStat = "SELECT * FROM orders WHERE game_id=" + gameId + " AND unit_id=" + unitId + " AND turn_num=1"
+      val lrs = connection.createStatement().executeQuery(locationStat)
+      lrs.next()
+      val location = lrs.getString("location")
+
+      var u = new DipUnit(gameId, country, unitType, startTurn, endTurn, unitId, location)
+      buf += u
+    }
+    connection.close()
+
+    return buf.toList
   }
 
   /**
@@ -40,14 +79,34 @@ object Database {
     val sqlStatement = "SELECT * FROM orders WHERE game_id=" + gameId + " AND turn_num=" + turnNum
     var (rs, connection) = query(sqlStatement)
 
-    // TODO: unpack the ResultSet into an Order object
-    val order = new Order(gameId, unitId, unitOrder, location, target, targetDest, success, reason, turnNum)
-
+    val buf = new ListBuffer[Order]
+    while(rs.next()) {
+      val id = rs.getInt("game_id")
+      val unitId = rs.getInt("unit_id")
+      val unitOrder = rs.getString("unit_order") match {
+        case "MOVE" => Move()
+        case "HOLD" => Hold()
+        case "CONVOY" => Convoy()
+        case "SUPPORT" => Support()
+        case "BUILD" => Build()
+        case "RETREAT" => Retreat()
+        case "DESTROY" => Destroy()
+      }
+      val location = rs.getString("location")
+      val target = rs.getString("target")
+      val targetDest = rs.getString("target_dest")
+      val success = rs.getInt("success") == 1
+      val reason = rs.getString("reason")
+      val num = rs.getInt("turn_num")
+      val order = new Order(gameId, unitId, unitOrder, location, target, targetDest, success, reason, turnNum)
+      buf += order
+    }
     connection.close()
-    return order
+
+    return buf.toList
   }
 
-  def turnExists(gameId: Int, turnNum: Int) : Bool = {
+  def turnExists(gameId: Int, turnNum: Int) : Boolean = {
     val sqlStatement = "SELECT * FROM turns WHERE game_id=" + gameId + " AND turn_num=" + turnNum
     var (rs, connection) = query(sqlStatement)
     val exists = rs.next()
@@ -71,9 +130,9 @@ object Database {
     }
     val phase : PhaseType = rs.getString("phase") match {
       case "Winter" => WinterPhase()
-      case "Orders" => Orders()
-      case "Build" => Build()
-      case "Retreat" => Retreat()
+      case "Orders" => OrdersPhase()
+      case "Build" => BuildPhase()
+      case "Retreat" => RetreatPhase()
     }
     connection.close()
 

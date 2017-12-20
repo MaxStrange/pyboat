@@ -83,7 +83,7 @@ object AllowedLocations {
     "Bulgaria (East Coast)"
   )
 
-  def contains(location: String) = {
+  def contains(location: String) : Boolean = {
     return allowedLocations.contains(location)
   }
 }

@@ -2,7 +2,6 @@ import org.apache.spark.sql.SparkSession
 
 object PyBoat {
   def main(args: Array[String]) {
-    //Database.test()
     val g = new Game(124311)
   }
 }
