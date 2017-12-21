@@ -2,8 +2,17 @@ import org.apache.spark.sql.SparkSession
 
 object PyBoat {
   def main(args: Array[String]) {
-    val g = new Game(124311)
-    println(g.historyString())
+//    val g = new Game(124311)
+//    println(g.historyString())
+    util.Random.setSeed(12345)
+
+    val allGameIds = Database.getAllGameIds()
+    val shuffledGameIds = util.Random.shuffle(allGameIds)
+    for (i <- 0 until 10) {
+      println("GAME ID: " + allGameIds(i))
+      val g = new Game(allGameIds(i))
+      println(g.historyString())
+    }
   }
 }
 

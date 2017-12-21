@@ -19,6 +19,17 @@ object Database {
     throw new IOException("Could not get the password from the password file.")
   }
 
+  def getAllGameIds() : List[Int] = {
+    val sqlStatement = "SELECT id FROM games"
+    var (rs, connection) = query(sqlStatement)
+    var lb = new ListBuffer[Int]()
+    while (rs.next()) {
+      lb += rs.getInt("id")
+    }
+    connection.close()
+    return lb.toList
+  }
+
   /**
    * Gets a DipUnit from the Database whose unitId and gameId are known.
    *
@@ -115,7 +126,8 @@ object Database {
         case "DESTROY" => Destroy()
       }
       val location = rs.getString("location")
-      val target = rs.getString("target")
+      val tmpTarget = rs.getString("target")
+      val target = if (tmpTarget != null && tmpTarget.contains("VIA CONVOY")) tmpTarget.dropRight(" VIA CONVOY".length) else tmpTarget
       val targetDest = rs.getString("target_dest")
       val success = rs.getInt("success") == 1
       val reason = rs.getString("reason")

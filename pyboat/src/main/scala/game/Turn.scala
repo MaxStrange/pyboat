@@ -96,7 +96,7 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     return newTurn
   }
 
-  def applyOrder(order : Order) = {
+  def applyOrder(order: Order) = {
     if (order.success) {
       order.orderType match {
         case Move() | Retreat() => applyMoveOrRetreatOrder(order)
@@ -105,33 +105,60 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
         case Destroy() => applyDestroyOrder(order)
       }
     } else {
-      // TODO: It may be necessary here to mark anyone who gets dislodged here
+      val u = board.getUnit(order.unitId)
+      if (season == Fall() && !unitIsDislodged(u)) {
+        // As long as the unit is not dislodged, it takes ownership of the territory it is sitting on
+        val newMatrix = updateMatrix(board.ownershipMatrix, u.location, u.country)
+        board = new BoardState(board.units, newMatrix)
+      }
     }
   }
 
-  def applyMoveOrRetreatOrder(o : Order) = {
+  def unitIsDislodged(u: DipUnit) : Boolean = {
+    for (o <- orders) {
+      if (o.target == u.location && o.success && o.unitId != u.unitId) {
+        // someone else successfully moved into u's location
+        // get u's order and see if they succeeded in leaving this location
+        // if they didn't, they are dislodged
+        val uOrder = getOrderByUnit(u.unitId)
+        if (!(uOrder.orderType == Move() && uOrder.success))
+          return true
+      }
+    }
+    return false
+  }
+
+  def getOrderByUnit(uid: Int) : Order = {
+    for (o <- orders) {
+      if (o.unitId == uid)
+        return o
+    }
+    throw new NullPointerException("No order with unitId: " + uid)
+  }
+
+  def applyMoveOrRetreatOrder(o: Order) = {
     val u = board.getUnit(o.unitId)
     val newLocation = o.target
     val newU = new DipUnit(gameId, u.country, u.unitType, u.startTurn, u.endTurn, u.unitId, newLocation)
     val newUnits = board.units.filter(un => un.unitId != u.unitId) ++ List(newU)
 
     if (season == Fall()) {
-      val newMatrix = board.ownershipMatrix + (newU.location -> newU.country)
+      val newMatrix = updateMatrix(board.ownershipMatrix, newU.location, newU.country)
       board = new BoardState(newUnits, newMatrix)
     } else {
       board = new BoardState(newUnits, board.ownershipMatrix)
     }
   }
 
-  def applyHoldConvoyOrSupportOrder(o : Order) = {
+  def applyHoldConvoyOrSupportOrder(o: Order) = {
     if (season == Fall()) {
       val u = board.getUnit(o.unitId)
-      val newMatrix = board.ownershipMatrix + (u.location -> u.country)
+      val newMatrix = updateMatrix(board.ownershipMatrix, u.location, u.country)
       board = new BoardState(board.units, newMatrix)
     }
   }
 
-  def applyBuildOrder(o : Order) = {
+  def applyBuildOrder(o: Order) = {
     val u = Database.getUnit(gameId, o.unitId)
     // Build order targets look like: "fleet London" rather than just "London", so chop off the first word
     val orderTargetSplit = o.target.split(" ")
@@ -141,8 +168,36 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     board = new BoardState(newUnits, board.ownershipMatrix)
   }
 
-  def applyDestroyOrder(o : Order) = {
+  def applyDestroyOrder(o: Order) = {
     board = new BoardState(board.units.filter(u => u.unitId != o.unitId), board.ownershipMatrix)
   }
-}
 
+  /**
+   * Creates a new ownership matrix from the given one and the update requested. Accounts for
+   * coasts that change hands (which should therefore cause all other coasts and the mainland for that
+   * country to change hands as well).
+   */
+  def updateMatrix(mat: collection.immutable.Map[String, CountryType],
+                   location: String,
+                   owner: CountryType) : collection.immutable.Map[String, CountryType] = {
+    if (location == "St. Petersburg (South Coast)" || location == "St. Petersburg" || location == "St. Petersburg (North Coast)") {
+      val update1 = mat + ("St. Petersburg (South Coast)" -> owner)
+      val update2 = update1 + ("St. Petersburg" -> owner)
+      val update3 = update2 + ("St. Petersburg (North Coast)" -> owner)
+      return update3
+    } else if (location == "Spain (North Coast)" || location == "Spain" || location == "Spain (South Coast)") {
+      val update1 = mat + ("Spain (North Coast)" -> owner)
+      val update2 = update1 + ("Spain" -> owner)
+      val update3 = update2 + ("Spain (South Coast)" -> owner)
+      return update3
+    } else if (location == "Bulgaria (South Coast)" || location == "Bulgaria (East Coast)" || location == "Bulgaria") {
+      val update1 = mat + ("Bulgaria (South Coast)" -> owner)
+      val update2 = update1 + ("Bulgaria (East Coast)" -> owner)
+      val update3 = update2 + ("Bulgaria" -> owner)
+      return update3
+    } else {
+      return mat + (location -> owner)
+    }
+  }
+}
+//Turn 19: Fall() OrdersPhase() 1905 gID: 124311
