@@ -77,17 +77,22 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    * at the given turn. Hence, turn 0 (Winter 1900) has no orders (though it does have units).
    */
   def deriveNext() : Turn = {
-    if (!Database.turnExists(gameId, turnNum))
-      throw new NullPointerException("No turn with gameId: " + gameId + " and turnNum: " + turnNum)
+    if (!Database.turnExists(gameId, turnNum + 1))
+      throw new NullPointerException("No turn with gameId: " + gameId + " and turnNum: " + (turnNum + 1))
 
+    println("Deriving turn: " + (turnNum + 1))
     var newTurn = Database.getTurn(gameId, turnNum + 1)
     newTurn.board = new BoardState(board.units, board.ownershipMatrix)
     val livingUnitIds = collection.mutable.Set[Int]()
     for (o <- newTurn.orders) {
+      println("  " + o)
       newTurn.applyOrder(o)
       livingUnitIds += o.unitId
     }
-    board = new BoardState(board.units.filter(u => livingUnitIds.contains(u.unitId)), board.ownershipMatrix)
+    if (newTurn.phase != BuildPhase() && newTurn.phase != RetreatPhase()) {
+      newTurn.board = new BoardState(newTurn.board.units.filter(
+                                      u => livingUnitIds.contains(u.unitId)), newTurn.board.ownershipMatrix)
+    }
     return newTurn
   }
 
@@ -99,6 +104,8 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
         case Build() => applyBuildOrder(order)
         case Destroy() => applyDestroyOrder(order)
       }
+    } else {
+      // TODO: It may be necessary here to mark anyone who gets dislodged here
     }
   }
 
