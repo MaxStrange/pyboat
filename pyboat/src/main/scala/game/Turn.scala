@@ -20,9 +20,29 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
   if (turnNum == 0) {
     board = createStartingBoard() // this constructs a new board through the database - avoid if possible
   }
+  val orders: List[Order] = Database.getOrdersForTurn(gameId, turnNum)
 
   override def toString() : String = {
     return "Turn " + turnNum + ": " + season + " " + phase + " " + year + " gID: " + gameId
+  }
+
+  /**
+   * Returns a String representation of the turn that is useful for debugging.
+   * This representation contains every unit's location and every player's list of territories.
+   * It also lists the orders that were input to derive this turn.
+   */
+  def historyString() : String = {
+    var sb = StringBuilder.newBuilder
+    sb.append("  " + this.toString() + "\n")
+    sb.append("    AFTER APPLYING THE FOLLOWING ORDERS:\n")
+    for (o <- orders) {
+      sb.append("    " + o)
+      sb.append("\n")
+    }
+    sb.append("    THE BOARD STATE IS LIKE THIS:\n")
+    sb.append(board.historyString())
+    sb.append("\n")
+    return sb.toString()
   }
 
   /**
@@ -50,20 +70,20 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
   }
 
   /**
-   * Derives a new Turn object from this one, by checking all the orders for this turn in the database.
+   * Derives a new Turn object from this one, by checking all the orders for the next turn in the database.
    * Does not change any state in this Turn.
+   *
+   * Remember that orders associated with a turn are the orders that were input to arrive
+   * at the given turn. Hence, turn 0 (Winter 1900) has no orders (though it does have units).
    */
   def deriveNext() : Turn = {
     if (!Database.turnExists(gameId, turnNum))
       throw new NullPointerException("No turn with gameId: " + gameId + " and turnNum: " + turnNum)
 
-    println("Deriving new turn " + (turnNum + 1) + " from game ID " + gameId)
-    val orders = Database.getOrdersForTurn(gameId, turnNum)
     var newTurn = Database.getTurn(gameId, turnNum + 1)
     newTurn.board = new BoardState(board.units, board.ownershipMatrix)
     val livingUnitIds = collection.mutable.Set[Int]()
-    for (o <- orders) {
-      println("Order: " + o)
+    for (o <- newTurn.orders) {
       newTurn.applyOrder(o)
       livingUnitIds += o.unitId
     }

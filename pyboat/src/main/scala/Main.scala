@@ -3,6 +3,7 @@ import org.apache.spark.sql.SparkSession
 object PyBoat {
   def main(args: Array[String]) {
     val g = new Game(124311)
+    println(g.historyString())
   }
 }
 

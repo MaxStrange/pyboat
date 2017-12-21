@@ -13,4 +13,17 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
     }
     throw new NullPointerException("No unit with unitId: " + unitId)
   }
+
+  def historyString() : String = {
+    var sb = StringBuilder.newBuilder
+    sb.append("    BOARD STATE:\n")
+    for (u <- units) {
+      sb.append("      " + u + "\n")
+    }
+    sb.append("\n")
+    for ((location, owner) <- ownershipMatrix) {
+      sb.append("      " + location + " owned by " + owner + "\n")
+    }
+    return sb.toString()
+  }
 }

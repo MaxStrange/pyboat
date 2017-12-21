@@ -11,13 +11,27 @@ class Game(val gameId: Int) {
 
   var lb = new ListBuffer[Turn]()
   var turn = Database.getTurn(gameId, 0)
+  lb += turn
   for (i <- 1 until numTurns - 1) {
     turn = turn.deriveNext()
     lb += turn
   }
   val turns = lb.toList
 
-  for (t <- turns) {
-    println(t)
+  /**
+   * Returns a String representation of the game that is useful for debugging.
+   * This representation contains every order on every turn and what the game looks like
+   * at the end of each turn.
+   */
+  def historyString() : String = {
+    var sb = StringBuilder.newBuilder
+    sb.append("--------------------------------------------------------------------\n")
+    sb.append(" Game " + id + " numTurns: " + numTurns + " numPlayers: " + numPlayers + "\n")
+    sb.append("--------------------------------------------------------------------\n")
+    for (t <- turns) {
+      sb.append(t.historyString())
+      sb.append("\n")
+    }
+    return sb.toString()
   }
 }
