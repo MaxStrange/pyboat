@@ -10,16 +10,19 @@ case class Destroy() extends OrderType {}
 class Order(val gameId : Int, val unitId : Int, val orderType : OrderType,
             val location : String, val target : String, val targetDest : String,
             val success : Boolean, val reason : String, val turnNum : Int) {
-  orderType match {
-    case m: Move => require(AllowedLocations.contains(location) && AllowedLocations.contains(target))
-    case h: Hold => require(AllowedLocations.contains(location))
-    case c: Convoy => require(AllowedLocations.contains(location) && AllowedLocations.contains(target)
-                              && AllowedLocations.contains(targetDest))
-    case s: Support => require(AllowedLocations.contains(location) && AllowedLocations.contains(target)
-                              && AllowedLocations.contains(targetDest))
-    case b: Build => ;
-    case r: Retreat => require(AllowedLocations.contains(location) && AllowedLocations.contains(target))
-    case d: Destroy => require(AllowedLocations.contains(location))
+  // There are 40 Orders in the database where a CONVOY was input incorrectly and the target ends up being ""
+  if (reason != "Invalid order or syntax error") {
+    orderType match {
+      case m: Move => require(AllowedLocations.contains(location) && AllowedLocations.contains(target))
+      case h: Hold => require(AllowedLocations.contains(location))
+      case c: Convoy => require(AllowedLocations.contains(location) && AllowedLocations.contains(target)
+                                && AllowedLocations.contains(targetDest))
+      case s: Support => require(AllowedLocations.contains(location) && AllowedLocations.contains(target)
+                                && AllowedLocations.contains(targetDest))
+      case b: Build => ;
+      case r: Retreat => require(AllowedLocations.contains(location) && AllowedLocations.contains(target))
+      case d: Destroy => require(AllowedLocations.contains(location))
+    }
   }
 
   override def toString() : String = {
