@@ -4,6 +4,8 @@ import scala.collection.mutable.ListBuffer
  * Game represents an entire game from the PlayDiplomacy database.
  * The default constructor takes a single Int (a game ID) and finds it
  * in the database, then populates itself from what it finds.
+ *
+ * TODO: X = 21, Y = 21
  */
 class Game(val gameId: Int) {
   val (id, numTurns, numPlayers) = Database.getGame(gameId)

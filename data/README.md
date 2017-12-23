@@ -8,6 +8,18 @@ players. In almost every game of diplomacy ever played, people often stop playin
 a certain point, and these games are no different - but they all at least *start*
 with seven players.
 
+**NOTE**
+Game 115915 should be deleted from the database via:
+
+```sql
+DELETE FROM players WHERE game_id=115915;
+DELETE FROM units WHERE game_id=115915;
+DELETE FROM orders WHERE game_id=115915;
+DELETE FROM turns WHERE game_id=115915;
+DELETE FROM games WHERE id=115915;
+```
+This game was discovered to be anomolous after the database was distributed.
+
 ## Tables
 
 There are five tables in total: games, orders, players, turns, units. Below is an
