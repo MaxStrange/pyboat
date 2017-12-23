@@ -20,7 +20,8 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
   if (turnNum == 0) {
     board = createStartingBoard() // this constructs a new board through the database - avoid if possible
   }
-  val orders: List[Order] = Database.getOrdersForTurn(gameId, turnNum)
+  // Orders may be added to in corner cases
+  var orders: List[Order] = Database.getOrdersForTurn(gameId, turnNum)
 
   override def toString() : String = {
     return "Turn " + turnNum + ": " + season + " " + phase + " " + year + " gID: " + gameId
@@ -89,7 +90,19 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
       newTurn.applyOrder(o)
       livingUnitIds += o.unitId
     }
+    // Now go through the units that DIDN'T input orders. In really old games (circa 2013), it was not illegal to not input orders
+    // Make sure that the units that didn't input orders were destroyed - this can only happen by you being dislodged and not having
+    // anywhere to go
+    val destroyedCandidates = for (u <- newTurn.board.units if !livingUnitIds.contains(u.unitId)) yield u
+    for (u <- destroyedCandidates) {
+      if (!unitIsDislodged(u)) {
+        // unit is not destroyed, unit should have a HOLD order instead
+        livingUnitIds += u.unitId
+        newTurn.orders = (new Order(gameId, u.unitId, Hold(), u.location, null, null, true, null, newTurn.turnNum)) :: newTurn.orders
+      }
+    }
     if (newTurn.phase != BuildPhase() && newTurn.phase != RetreatPhase()) {
+      // Remove all units that did not enter an order this turn
       newTurn.board = new BoardState(newTurn.board.units.filter(
                                       u => livingUnitIds.contains(u.unitId)), newTurn.board.ownershipMatrix)
     }
@@ -120,9 +133,14 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
         // someone else successfully moved into u's location
         // get u's order and see if they succeeded in leaving this location
         // if they didn't, they are dislodged
-        val uOrder = getOrderByUnit(u.unitId)
-        if (!(uOrder.orderType == Move() && uOrder.success))
-          return true
+        try {
+          val uOrder = getOrderByUnit(u.unitId)
+          if (!(uOrder.orderType == Move() && uOrder.success))
+            return true
+        } catch {
+          // If the unit doesn't have an order, it should be a HOLD order
+          case npe: NullPointerException => return true
+        }
       }
     }
     return false

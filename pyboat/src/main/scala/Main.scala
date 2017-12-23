@@ -1,33 +1,57 @@
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.FileSystems
 import org.apache.spark.sql.SparkSession
 import org.deeplearning4j.eval.Evaluation
-import org.deeplearning4j.nn.api.Layer
-import org.deeplearning4j.nn.api.OptimizationAlgorithm
-import org.deeplearning4j.nn.conf.MultiLayerConfiguration
-import org.deeplearning4j.nn.conf.NeuralNetConfiguration
-import org.deeplearning4j.nn.conf.NeuralNetConfiguration.ListBuilder
-import org.deeplearning4j.nn.conf.distribution.UniformDistribution
-import org.deeplearning4j.nn.conf.layers.DenseLayer
-import org.deeplearning4j.nn.conf.layers.OutputLayer
-import org.deeplearning4j.nn.conf.layers.OutputLayer.Builder
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-import org.deeplearning4j.nn.weights.WeightInit
-import org.deeplearning4j.optimize.listeners.ScoreIterationListener
-import org.nd4j.linalg.activations.Activation
+import org.deeplearning4j.ui.api.UIServer
+import org.deeplearning4j.ui.stats.StatsListener
+import org.deeplearning4j.ui.storage.FileStatsStorage
 import org.nd4j.linalg.api.ndarray.INDArray
-import org.nd4j.linalg.dataset.DataSet
-import org.nd4j.linalg.factory.Nd4j
-import org.nd4j.linalg.lossfunctions.LossFunctions
+
+abstract class ModelArch
 
 object PyBoat {
   def main(args: Array[String]) {
     util.Random.setSeed(12345)
 
-    val allGameIds = Database.getAllGameIds()
-    val shuffledGameIds = util.Random.shuffle(allGameIds)
-    var conf = new NeuralNetConfiguration.Builder()
+    // !! Change this value to change what model is being trained !! //
+    val architecture = XorFullyConnected()
 
-    val input = Nd4j.zeros(4, 2)
-    println(input)
+    val networkConf = architecture match {
+      case XorFullyConnected() => XorFullyConnected().getConfiguration()
+    }
+
+    val dsItr = architecture match {
+      case XorFullyConnected() => XorFullyConnected().getDatasetIterator()
+    }
+
+    val net = new MultiLayerNetwork(networkConf)
+    net.init()
+
+    val uiServer = UIServer.getInstance()
+    val fpath = "savedstuff"
+    Files.deleteIfExists(FileSystems.getDefault().getPath(fpath))
+    val statsStorage = new FileStatsStorage(new File(fpath))
+    uiServer.attach(statsStorage)
+
+    net.setListeners(new StatsListener(statsStorage))
+
+    var i = 0
+    while (dsItr.hasNext()) {
+      val ds = dsItr.next()
+      net.fit(ds)
+    }
+    dsItr.reset()
+
+    val output: INDArray = net.output(dsItr.next().getFeatureMatrix)
+    dsItr.reset()
+    println(output)
+
+    val eval: Evaluation = new Evaluation(2)
+    eval.eval(dsItr.next().getLabels, output)
+    dsItr.reset()
+    println(eval.stats)
   }
 }
 
