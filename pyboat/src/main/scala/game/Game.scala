@@ -25,15 +25,40 @@ class Game(val gameId: Int) {
   val turns = lb.toList
   var curTurn = turns(0)
 
+  def getNumChannelsHoldOrMove() : Int = {
+    return turns(0).getHoldOrMoveMatrix().shape()(2)
+  }
+
+  def getNumOutcomesHoldOrMove() : Int = {
+    return turns(1).getOrderMaskAsHoldsOrMoves().length()
+  }
+
+  def getNumInputColumnsHoldOrMove() : Int = {
+    return turns(0).getHoldOrMoveMatrix().length()
+  }
+
   def hasNextHoldOrMoveMatrix() : Boolean = {
-    // TODO: This is wrong. It should only return true if there is another spring/fall orders left
-    return curTurn.turnNum < (turns.length - 1)
+    // Only return true if there is another spring/fall orders left
+    val allTurnsAfterThisOne = turns.dropWhile(x => x.turnNum != curTurn.turnNum).drop(1)
+    for (t <- allTurnsAfterThisOne) {
+      if (turnIsSpringOrFallAndOrders(t))
+        return true
+    }
+    return false
+  }
+
+  private def turnIsSpringOrFallAndOrders(t: Turn) : Boolean = {
+    return (t.season == Spring() || t.season == Fall()) && (t.phase == OrdersPhase())
   }
 
   def getNextHoldOrMoveMatrix() : (INDArray, INDArray) = {
     require(hasNextHoldOrMoveMatrix())
     val mat = curTurn.getHoldOrMoveMatrix()
-    curTurn = turns(curTurn.turnNum + 1)// TODO this is wrong: it should move the turn counter to the next spring/fall orders phase
+
+    // Move curTurn to the next Spring/Fall Orders phase
+    val allTurnsAfterThisOne = turns.dropWhile(x => x.turnNum != curTurn.turnNum)
+    curTurn = allTurnsAfterThisOne.dropWhile(x => !turnIsSpringOrFallAndOrders(x))(0)
+
     val label = curTurn.getOrderMaskAsHoldsOrMoves()
     return (mat, label)
   }

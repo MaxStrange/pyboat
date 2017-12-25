@@ -26,10 +26,8 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
   if (turnNum == 0) {
     board = createStartingBoard() // this constructs a new board through the database - avoid if possible
   }
-  // Orders may be added to in corner cases
   /**
    * Orders are the list of Orders that resulted in this Turn's BoardState from last Turn.
-   * // TODO Make sure this is true
    */
   var orders: List[Order] = Database.getOrdersForTurn(gameId, turnNum)
 
@@ -43,14 +41,14 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    *            255 -> unit present
    * channel 1: 0   -> unit is an army
    *            255 -> unit is a fleet
-   * channel 2: 0   -> unit is owned by Austria
-   *            42  -> unit is owned by England
-   *            85  -> unit is owned by France
-   *            128 -> unit is owned by Germany
-   *            170 -> unit is owned by Italy
-   *            212 -> unit is owned by Russia
-   *            255 -> unit is onwed by Turkey
-   * channel 3: 0   -> location is land
+   * channel 2: 0   -> unit is owned by nobody
+   *            36  -> unit is owned by Austria
+   *            72  -> unit is owned by England
+   *            109 -> unit is owned by France
+   *            145 -> unit is owned by Germany
+   *            182 -> unit is owned by Italy
+   *            218 -> unit is owned by Russia
+   * channel 3: 255 -> location is owned by Turkey 0   -> location is land
    *            128 -> location is impassible
    *            255 -> location is sea
    * channel 4: 0   -> location is owned by nobody
@@ -67,9 +65,23 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    *            255 -> location is an SC
    */
   def getHoldOrMoveMatrix() : INDArray = {
-    // TODO
-    val testblah = Nd4j.zeros(21, 21, 7)
-    return testblah
+    val channel0 = board.getUnitMask()
+    val channel1 = board.getUnitTypeMask()
+    val channel2 = board.getUnitOwnershipMask()
+    val channel3 = board.getLandTypeMask()
+    val channel4 = board.getLandOwnershipMask()
+    val channel5 = if (season == Spring()) Nd4j.zeros(21, 21) else Nd4j.ones(21, 21) * 255
+    val channel6 = board.getSCMask()
+
+    var matrix = Nd4j.zeros(21, 21, 7)// TODO: Don't do zeros - just make a new INDArray with the proper specs?
+    matrix = Nd4j.concat(2, channel0)
+    matrix = Nd4j.concat(2, channel1)
+    matrix = Nd4j.concat(2, channel2)
+    matrix = Nd4j.concat(2, channel3)
+    matrix = Nd4j.concat(2, channel4)
+    matrix = Nd4j.concat(2, channel5)
+    matrix = Nd4j.concat(2, channel6)
+    return matrix
   }
 
   /**

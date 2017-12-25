@@ -92,23 +92,19 @@ case class MoveOrHoldCNN() extends ModelArch {
 class CNNDataFetcher() extends BaseDataFetcher {
   val shuffledGameIds = util.Random.shuffle(Database.getAllGameIds())
   var curGame = new Game(shuffledGameIds(0))
-  val nChannels = 7//unit_loc, unit_type, unit_own, loc_type, loc_own, season, scs//TODO: replace with a call to some game method that returns this
+  val nChannels = curGame.getNumChannelsHoldOrMove()
+  numOutcomes = curGame.getNumOutcomesHoldOrMove()
+  inputColumns = curGame.getNumInputColumnsHoldOrMove()
+  totalExamples = 1 //TODO: Get this from the Database
   cursor = 0
-  numOutcomes = 21 * 21
-  inputColumns = 21 * 21
-  totalExamples = 1//TODO: Get this from the Database
 
   override def initializeCurrFromList(examples: java.util.List[DataSet]) = {
     require(!examples.isEmpty)
     val inputs = createInputMatrix(examples.size())
     val labels = createOutputMatrix(examples.size())
-    println("INPUTS as zeros: " + inputs)
-    println("LABELS as zeros: " + labels)
     for (i <- 0 until examples.size()) {
       val nextInput = examples.get(i).getFeatureMatrix()
       val nextLabel = examples.get(i).getLabels()
-      println("Next Input: " + nextInput)
-      println("Next label: " + nextLabel)
       inputs.putRow(i, examples.get(i).getFeatureMatrix())
       labels.putRow(i, examples.get(i).getLabels())
     }
@@ -134,7 +130,6 @@ class CNNDataFetcher() extends BaseDataFetcher {
       lb += new DataSet(turn, label)
     }
     val examples = lb.toList
-    println("EXAMPLES: " + examples)
     initializeCurrFromList(examples.asJava)
     cursor += numExamples
   }

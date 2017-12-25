@@ -28,4 +28,71 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
     }
     return sb.toString()
   }
+
+  /**
+   * 21 x 21 INDArray where:
+   * 0   -> no unit here
+   * 255 -> unit present
+   */
+  def getUnitMask() : INDArray = {
+    //TODO
+  }
+
+  /**
+   * 21 x 21 INDArray where:
+   * 0   -> unit is an army
+   * 255 -> unit is a fleet
+   */
+  def getUnitTypeMask() : INDArray = {
+    //TODO
+  }
+
+  /**
+   * 21 x 21 INDArray where:
+   * 0   -> unit is owned by nobody
+   * 36  -> unit is owned by Austria
+   * 72  -> unit is owned by England
+   * 109 -> unit is owned by France
+   * 145 -> unit is owned by Germany
+   * 182 -> unit is owned by Italy
+   * 218 -> unit is owned by Russia
+   * 255 -> unit is owned by Turkey
+   */
+  def getUnitOwnershipMask() : INDArray = {
+    //TODO
+  }
+
+  /**
+   * 21 x 21 INDArray where:
+   * 0   -> location is land
+   * 128 -> location is impassible
+   * 255 -> location is sea
+   */
+ def getLandTypeMask() : INDArray = {
+    //TODO
+  }
+
+  /**
+   * 21 x 21 INDArray where:
+   * 0   -> location is owned by nobody
+   * 36  -> location is owned by Austria
+   * 72  -> location is owned by England
+   * 109 -> location is owned by France
+   * 145 -> location is owned by Germany
+   * 182 -> location is owned by Italy
+   * 218 -> location is owned by Russia
+   * 255 -> location is owned by Turkey
+   */
+  def getLandOwnershipMask() : INDArray = {
+    //TODO
+  }
+
+  /**
+   * 21 x 21 INDArray where:
+   * 0   -> location is not an SC
+   * 255 -> location is an SC
+   */
+  def getSCMask() : INDArray = {
+    //TODO
+  }
 }
