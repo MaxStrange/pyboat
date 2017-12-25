@@ -3,11 +3,13 @@ import java.nio.file.Files
 import java.nio.file.FileSystems
 import org.apache.spark.sql.SparkSession
 import org.deeplearning4j.eval.Evaluation
+import org.deeplearning4j.nn.conf.MultiLayerConfiguration
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
 import org.deeplearning4j.ui.api.UIServer
 import org.deeplearning4j.ui.stats.StatsListener
 import org.deeplearning4j.ui.storage.FileStatsStorage
 import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.linalg.dataset.api.iterator.BaseDatasetIterator
 
 abstract class ModelArch
 
@@ -16,14 +18,16 @@ object PyBoat {
     util.Random.setSeed(12345)
 
     // !! Change this value to change what model is being trained !! //
-    val architecture = XorFullyConnected()
+    val architecture: ModelArch = XorFullyConnected()
 
-    val networkConf = architecture match {
+    val networkConf: MultiLayerConfiguration = architecture match {
       case XorFullyConnected() => XorFullyConnected().getConfiguration()
+      case MoveOrHoldCNN() => MoveOrHoldCNN().getConfiguration()
     }
 
-    val dsItr = architecture match {
+    val dsItr: BaseDatasetIterator = architecture match {
       case XorFullyConnected() => XorFullyConnected().getDatasetIterator()
+      case MoveOrHoldCNN() => MoveOrHoldCNN().getDatasetIterator()
     }
 
     val net = new MultiLayerNetwork(networkConf)

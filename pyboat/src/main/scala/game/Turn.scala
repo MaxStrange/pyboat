@@ -21,10 +21,61 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     board = createStartingBoard() // this constructs a new board through the database - avoid if possible
   }
   // Orders may be added to in corner cases
+  /**
+   * Orders are the list of Orders that resulted in this Turn's BoardState from last Turn.
+   * // TODO Make sure this is true
+   */
   var orders: List[Order] = Database.getOrdersForTurn(gameId, turnNum)
 
   override def toString() : String = {
     return "Turn " + turnNum + ": " + season + " " + phase + " " + year + " gID: " + gameId
+  }
+
+  /**
+   * Gets this turn's BoardState as an INDArray of 21 x 21 x 7, where:
+   * channel 0: 0   -> no unit here
+   *            255 -> unit present
+   * channel 1: 0   -> unit is an army
+   *            255 -> unit is a fleet
+   * channel 2: 0   -> unit is owned by Austria
+   *            42  -> unit is owned by England
+   *            85  -> unit is owned by France
+   *            128 -> unit is owned by Germany
+   *            170 -> unit is owned by Italy
+   *            212 -> unit is owned by Russia
+   *            255 -> unit is onwed by Turkey
+   * channel 3: 0   -> location is land
+   *            128 -> location is impassible
+   *            255 -> location is sea
+   * channel 4: 0   -> location is owned by nobody
+   *            36  -> location is owned by Austria
+   *            72  -> location is owned by England
+   *            109 -> location is owned by France
+   *            145 -> location is owned by Germany
+   *            182 -> location is owned by Italy
+   *            218 -> location is owned by Russia
+   *            255 -> location is owned by Turkey
+   * channel 5: 0   -> season is Spring
+   *            255 -> season is Fall
+   * channel 6: 0   -> location is not an SC
+   *            255 -> location is an SC
+   */
+  def getHoldOrMoveMatrix() : INDArray = {
+    // TODO
+    val testblah = Nd4j.zeros(21, 21, 7)
+  }
+
+  /**
+   * Gets this turn's list of orders (the orders that resulted in this turn's board state)
+   * as an INDArray of 21 x 21, where 0 means a unit occupying that space either HOLD'd, CONVOY'd,
+   * or SUPPORT'd to HOLD, and a 255 means a unit occupying that space either MOVE'd or
+   * SUPPORT'd to MOVE.
+   */
+  def getOrderMaskAsHoldsOrMoves() : INDArray = {
+    // TODO
+    val blah = Nd4j.zeros(21, 21)
+    blah.putScalar(Array[Int](0, 15), 1)
+    return blah
   }
 
   /**

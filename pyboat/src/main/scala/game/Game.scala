@@ -5,7 +5,6 @@ import scala.collection.mutable.ListBuffer
  * The default constructor takes a single Int (a game ID) and finds it
  * in the database, then populates itself from what it finds.
  *
- * TODO: X = 21, Y = 21
  */
 class Game(val gameId: Int) {
   val (id, numTurns, numPlayers) = Database.getGame(gameId)
@@ -19,6 +18,20 @@ class Game(val gameId: Int) {
     lb += turn
   }
   val turns = lb.toList
+  var curTurn = turns(0)
+
+  def hasNextHoldOrMoveMatrix() : Boolean = {
+    // TODO: This is wrong. It should only return true if there is another spring/fall orders left
+    return curTurn.turnNum < (turns.length - 1)
+  }
+
+  def getNextHoldOrMoveMatrix() : (INDArray, INDArray) = {
+    require(hasNextHoldOrMoveMatrix())
+    val mat = curTurn.getHoldOrMoveMatrix()
+    curTurn = turns(curTurn.turnNum + 1)// TODO this is wrong: it should move the turn counter to the next spring/fall orders phase
+    val label = curTurn.getOrderMaskAsHoldsOrMoves()
+    return (mat, label)
+  }
 
   /**
    * Returns a String representation of the game that is useful for debugging.
