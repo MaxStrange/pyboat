@@ -1,3 +1,5 @@
+package pyboat.game
+
 abstract class UnitType { val code: Char }
 case class Fleet() extends UnitType { val code = 'F' }
 case class Army() extends UnitType { val code = 'A' }

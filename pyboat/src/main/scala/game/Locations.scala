@@ -1,3 +1,5 @@
+package pyboat.game
+
 object AllowedLocations {
   val allowedLocations = Set(
     "Edinburgh",

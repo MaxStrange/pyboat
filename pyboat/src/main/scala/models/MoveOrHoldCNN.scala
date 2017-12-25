@@ -1,4 +1,10 @@
+package pyboat.models
+
+import pyboat.Database
+import pyboat.game.Game
+
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
@@ -30,7 +36,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     builder.iterations(1)
     builder.regularization(true).l2(0.0005)
     builder.learningRate(0.01)
-    builder.lrPolicyDecayRate(0.001).lrPolicyPower(0.75)
+    //builder.lrPolicyDecayRate(0.001).lrPolicyPower(0.75)
     builder.weightInit(WeightInit.XAVIER)
     builder.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
     builder.updater(Updater.NESTEROVS).momentum(0.9)
@@ -85,22 +91,26 @@ case class MoveOrHoldCNN() extends ModelArch {
 
 class CNNDataFetcher() extends BaseDataFetcher {
   val shuffledGameIds = util.Random.shuffle(Database.getAllGameIds())
-  var curGame = Game(shuffledGameIds(0))
+  var curGame = new Game(shuffledGameIds(0))
   val nChannels = 7//unit_loc, unit_type, unit_own, loc_type, loc_own, season, scs//TODO: replace with a call to some game method that returns this
   cursor = 0
   numOutcomes = 21 * 21
   inputColumns = 21 * 21
-  totalExamples = 100//TODO: Get this from the Database
+  totalExamples = 1//TODO: Get this from the Database
 
-  override def initializeCurrFromList(examples: List[DataSet]) = {
-    if (examples.isEmpty())
-      log.warn("Warning: empty dataset from the fetcher")
-
+  override def initializeCurrFromList(examples: java.util.List[DataSet]) = {
+    require(!examples.isEmpty)
     val inputs = createInputMatrix(examples.size())
     val labels = createOutputMatrix(examples.size())
-    for (i <- examples.size) {
-      inputs.putRow(i, examples(i).getFeatureMatrix())
-      inputs.putRow(i, examples(i).getLabels())
+    println("INPUTS as zeros: " + inputs)
+    println("LABELS as zeros: " + labels)
+    for (i <- 0 until examples.size()) {
+      val nextInput = examples.get(i).getFeatureMatrix()
+      val nextLabel = examples.get(i).getLabels()
+      println("Next Input: " + nextInput)
+      println("Next label: " + nextLabel)
+      inputs.putRow(i, examples.get(i).getFeatureMatrix())
+      labels.putRow(i, examples.get(i).getLabels())
     }
     curr = new DataSet(inputs, labels)
   }
@@ -113,17 +123,18 @@ class CNNDataFetcher() extends BaseDataFetcher {
     val to = if (cursor + numExamples > totalExamples) totalExamples else cursor + numExamples
     // cursor is iterating over each turn in the dataset, so ask the current game if it has any more turns
     // if it doesn't, expand the next game and start getting turns from it, etc.
-    val examples = generator[DataSet] {produce =>
-      for (i <- suspendable(from until to)) {
-        while (curGame != null && !curGame.hasNextHoldOrMoveMatrix()) {
-          fetchNextGame()
-        }
-        //If this happens, there is something wrong with totalExamples (because we ran out of games before we were supposed to)
-        require(curGame != null)
-        val (turn, label) = curGame.getNextHoldOrMoveMatrix()
-        produce(new DataSet(turn, label))
+    var lb = new ListBuffer[DataSet]()
+    for (i <- from until to ) {
+      while (curGame != null && !curGame.hasNextHoldOrMoveMatrix()) {
+        fetchNextGame()
       }
+      //If this happens, there is something wrong with totalExamples (because we ran out of games before we were supposed to)
+      require(curGame != null)
+      val (turn, label) = curGame.getNextHoldOrMoveMatrix()
+      lb += new DataSet(turn, label)
     }
+    val examples = lb.toList
+    println("EXAMPLES: " + examples)
     initializeCurrFromList(examples.asJava)
     cursor += numExamples
   }
@@ -137,12 +148,12 @@ class CNNDataFetcher() extends BaseDataFetcher {
     if (ls.length == 0)
       curGame = null
     else
-      curGame = Game(ls(0))
+      curGame = new Game(ls(0))
   }
 }
 
 class CNNDatasetIterator(batchSize: Int, numExamples: Int, fetcher: DataSetFetcher) extends BaseDatasetIterator(batchSize, numExamples, fetcher) {
   batch = batchSize
-  numExamples = if (numExamples < 0) fetcher.totalExamples else numExamples
-  fetcher = fetcher
+  //numExamples = if (numExamples < 0) fetcher.totalExamples else numExamples
+  //fetcher = fetcher
 }

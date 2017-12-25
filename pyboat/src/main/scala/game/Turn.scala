@@ -1,4 +1,10 @@
+package pyboat.game
+
+import pyboat.Database
+
 import scala.collection.mutable.Map
+import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.linalg.factory.Nd4j
 
 abstract class PhaseType
 case class WinterPhase() extends PhaseType {}
@@ -63,6 +69,7 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
   def getHoldOrMoveMatrix() : INDArray = {
     // TODO
     val testblah = Nd4j.zeros(21, 21, 7)
+    return testblah
   }
 
   /**
@@ -132,12 +139,12 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     if (!Database.turnExists(gameId, turnNum + 1))
       throw new NullPointerException("No turn with gameId: " + gameId + " and turnNum: " + (turnNum + 1))
 
-    println("Deriving turn: " + (turnNum + 1))
+    //println("Deriving turn: " + (turnNum + 1))
     var newTurn = Database.getTurn(gameId, turnNum + 1)
     newTurn.board = new BoardState(board.units, board.ownershipMatrix)
     val livingUnitIds = collection.mutable.Set[Int]()
     for (o <- newTurn.orders) {
-      println("  " + o)
+      //println("  " + o)
       newTurn.applyOrder(o)
       livingUnitIds += o.unitId
     }

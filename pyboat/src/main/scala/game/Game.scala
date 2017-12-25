@@ -1,4 +1,9 @@
+package pyboat.game
+
+import pyboat.Database
+
 import scala.collection.mutable.ListBuffer
+import org.nd4j.linalg.api.ndarray.INDArray
 
 /**
  * Game represents an entire game from the PlayDiplomacy database.

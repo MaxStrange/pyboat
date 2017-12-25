@@ -1,3 +1,5 @@
+package pyboat.game
+
 /**
  * BoardState represents the state of the game board at a given turn.
  *

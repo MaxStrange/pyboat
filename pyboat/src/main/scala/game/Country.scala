@@ -1,4 +1,6 @@
-abstract class CountryType() { val code : Char }
+package pyboat.game
+
+sealed abstract class CountryType() { val code : Char }
 case class Austria() extends CountryType { val code = 'A' }
 case class England() extends CountryType { val code = 'E' }
 case class France() extends CountryType  { val code = 'F' }

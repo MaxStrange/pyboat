@@ -1,3 +1,7 @@
+package pyboat
+
+import pyboat.game._
+
 import scala.collection.mutable.ListBuffer
 import java.sql.DriverManager
 import java.sql.Connection

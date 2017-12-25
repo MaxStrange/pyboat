@@ -1,3 +1,9 @@
+package pyboat
+
+import pyboat.models.ModelArch
+import pyboat.models.MoveOrHoldCNN
+import pyboat.models.XorFullyConnected
+
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.FileSystems
@@ -11,14 +17,13 @@ import org.deeplearning4j.ui.storage.FileStatsStorage
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.dataset.api.iterator.BaseDatasetIterator
 
-abstract class ModelArch
-
 object PyBoat {
   def main(args: Array[String]) {
     util.Random.setSeed(12345)
 
     // !! Change this value to change what model is being trained !! //
-    val architecture: ModelArch = XorFullyConnected()
+    val architecture: ModelArch = MoveOrHoldCNN()
+    println("ARCHITECTURE: " + architecture)
 
     val networkConf: MultiLayerConfiguration = architecture match {
       case XorFullyConnected() => XorFullyConnected().getConfiguration()
@@ -30,9 +35,11 @@ object PyBoat {
       case MoveOrHoldCNN() => MoveOrHoldCNN().getDatasetIterator()
     }
 
+    println("Building network...")
     val net = new MultiLayerNetwork(networkConf)
     net.init()
 
+    println("Initializing UI server...")
     val uiServer = UIServer.getInstance()
     val fpath = "savedstuff"
     Files.deleteIfExists(FileSystems.getDefault().getPath(fpath))
@@ -41,6 +48,7 @@ object PyBoat {
 
     net.setListeners(new StatsListener(statsStorage))
 
+    println("Training...")
     var i = 0
     while (dsItr.hasNext()) {
       val ds = dsItr.next()

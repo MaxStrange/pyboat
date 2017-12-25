@@ -1,3 +1,5 @@
+package pyboat.game
+
 abstract class OrderType
 case class Move() extends OrderType {}
 case class Hold() extends OrderType {}

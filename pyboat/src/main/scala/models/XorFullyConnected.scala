@@ -1,3 +1,5 @@
+package pyboat.models
+
 import scala.collection.JavaConverters._
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration
