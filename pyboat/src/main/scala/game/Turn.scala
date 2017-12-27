@@ -39,7 +39,8 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    * Gets this turn's BoardState as an INDArray of 21 x 21 x 7, where:
    * channel 0: 0   -> no unit here
    *            255 -> unit present
-   * channel 1: 0   -> unit is an army
+   * channel 1: 0   -> unit is not present
+   *            128 -> unit is an army
    *            255 -> unit is a fleet
    * channel 2: 0   -> unit is owned by nobody
    *            36  -> unit is owned by Austria
@@ -48,7 +49,8 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    *            145 -> unit is owned by Germany
    *            182 -> unit is owned by Italy
    *            218 -> unit is owned by Russia
-   * channel 3: 255 -> location is owned by Turkey 0   -> location is land
+   *            255 -> location is owned by Turkey
+   * channel 3: 0   -> location is land
    *            128 -> location is impassible
    *            255 -> location is sea
    * channel 4: 0   -> location is owned by nobody
@@ -70,17 +72,15 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     val channel2 = board.getUnitOwnershipMask()
     val channel3 = board.getLandTypeMask()
     val channel4 = board.getLandOwnershipMask()
-    val channel5 = if (season == Spring()) Nd4j.zeros(21, 21) else Nd4j.ones(21, 21) * 255
+    val channel5 = if (season == Spring()) Nd4j.zeros(21, 21) else Nd4j.ones(21, 21).mul(255)
     val channel6 = board.getSCMask()
 
-    var matrix = Nd4j.zeros(21, 21, 7)// TODO: Don't do zeros - just make a new INDArray with the proper specs?
-    matrix = Nd4j.concat(2, channel0)
-    matrix = Nd4j.concat(2, channel1)
-    matrix = Nd4j.concat(2, channel2)
-    matrix = Nd4j.concat(2, channel3)
-    matrix = Nd4j.concat(2, channel4)
-    matrix = Nd4j.concat(2, channel5)
-    matrix = Nd4j.concat(2, channel6)
+    var matrix = Nd4j.concat(2, channel0, channel1)
+    matrix = Nd4j.concat(2, channel1, channel2)
+    matrix = Nd4j.concat(2, channel2, channel3)
+    matrix = Nd4j.concat(2, channel3, channel4)
+    matrix = Nd4j.concat(2, channel4, channel5)
+    matrix = Nd4j.concat(2, channel5, channel6)
     return matrix
   }
 

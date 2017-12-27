@@ -82,7 +82,8 @@ object AllowedLocations {
     "North Africa",
     "Spain (South Coast)",
     "Bulgaria (South Coast)",
-    "Bulgaria (East Coast)"
+    "Bulgaria (East Coast)",
+    "Switzerland"
   )
 
   def contains(location: String) : Boolean = {

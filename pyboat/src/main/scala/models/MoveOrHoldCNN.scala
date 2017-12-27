@@ -95,7 +95,7 @@ class CNNDataFetcher() extends BaseDataFetcher {
   val nChannels = curGame.getNumChannelsHoldOrMove()
   numOutcomes = curGame.getNumOutcomesHoldOrMove()
   inputColumns = curGame.getNumInputColumnsHoldOrMove()
-  totalExamples = 1 //TODO: Get this from the Database
+  totalExamples = Database.getTotalNumExamplesMoveOrHold()
   cursor = 0
 
   override def initializeCurrFromList(examples: java.util.List[DataSet]) = {

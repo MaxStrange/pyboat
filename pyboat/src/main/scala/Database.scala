@@ -14,6 +14,11 @@ object Database {
   val username = "maxst"
   val password = readPasswordFromFile()
 
+  def getTotalNumExamplesMoveOrHold() : Int = {
+    // TODO
+    return 1
+  }
+
   def readPasswordFromFile() : String = {
     for (line <- Source.fromFile("password.secrets").getLines()) {
       if (line != "") {
