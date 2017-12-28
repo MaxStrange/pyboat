@@ -1,12 +1,5 @@
 package pyboat
 
-//// TODO: REMOVE AFTER DEBUG
-import pyboat.game.Game
-import org.nd4j.linalg.factory.Nd4j
-import org.nd4j.linalg.indexing.INDArrayIndex
-import org.nd4j.linalg.indexing.NDArrayIndex
-//////////////////////////////
-
 import pyboat.models.ModelArch
 import pyboat.models.MoveOrHoldCNN
 import pyboat.models.XorFullyConnected

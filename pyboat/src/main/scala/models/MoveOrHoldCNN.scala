@@ -81,6 +81,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.pretrain(false)
     val conf = listBuilder.build
 
+    // TODO: make loss function ignore non-unit locations in the label
     return conf
   }
 

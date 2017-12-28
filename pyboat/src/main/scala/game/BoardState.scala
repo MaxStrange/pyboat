@@ -123,12 +123,18 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
   /**
    * 1 x 21 x 21 INDArray where:
    * 0   -> location is land
-   * 128 -> location is impassible
-   * 255 -> location is sea
+   * 128 -> location is sea
+   * 255 -> location is impassable
    */
  def getLandTypeMask() : INDArray = {
-    // TODO
-    return Nd4j.zeros(1, 21, 21)
+    var arr = Nd4j.zeros(1, 21, 21)
+    for (loc <- AllowedLocations.allowedLocations) {
+      if (AllowedLocations.isWater(loc))
+        arr = putValueByLocation(128, loc, arr)
+      else if (loc == "Switzerland")
+        arr = putValueByLocation(255, loc, arr)
+    }
+    return arr
   }
 
   /**
@@ -144,7 +150,7 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
    */
   def getLandOwnershipMask() : INDArray = {
     var arr = Nd4j.zeros(1, 21, 21)
-    for (loc <- AllowedLocations.allowedLocations ) {
+    for (loc <- AllowedLocations.allowedLocations) {
       if (ownershipMatrix.contains(loc)) {
         val v = ownershipMatrix(loc) match {
           case Austria() => 36
@@ -169,8 +175,12 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
    * 255 -> location is an SC
    */
   def getSCMask() : INDArray = {
-    //TODO
-    return Nd4j.zeros(1, 21, 21)
+    var arr = Nd4j.zeros(1, 21, 21)
+    for (loc <- AllowedLocations.allowedLocations) {
+      if (AllowedLocations.isSC(loc))
+        arr = putValueByLocation(255, loc, arr)
+    }
+    return arr
   }
 
   /**
@@ -181,7 +191,7 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
    * @param loc The location name
    * @param arr A 1 x 21 x 21 INDArray to put the value into
    */
-  private def putValueByLocation(v: Int, loc: String, arr: INDArray) : INDArray = {
+  def putValueByLocation(v: Int, loc: String, arr: INDArray) : INDArray = {
     require(AllowedLocations.contains(loc))
 
     val (rIndexes, cIndexes) = getLocationIndexes(loc)

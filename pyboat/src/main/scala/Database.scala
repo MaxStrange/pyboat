@@ -15,8 +15,28 @@ object Database {
   val password = readPasswordFromFile()
 
   def getTotalNumExamplesMoveOrHold() : Int = {
-    // TODO
-    return 1
+    // The number of labels of this type in a game = (n - 1),
+    // where n is the number of turns
+    // so the number of labels in the database is N - g
+    // where g is the number of games and N is the total number
+    // of Fall/Winter/Spring Orders phases
+    val turnsStatement = "SELECT COUNT(turn_num) AS total FROM turns WHERE phase=\"Orders\""
+    val gamesStatement = "SELECT COUNT(id) AS total FROM games"
+    var (rs, connection) = query(turnsStatement)
+
+    rs.next()
+    val totalTurns = rs.getInt("total")
+    println("TOTAL NUMBER OF TURNS: " + totalTurns)
+    connection.close()
+
+    var (rs1, connection1) = query(gamesStatement)
+
+    rs1.next()
+    val totalGames = rs1.getInt("total")
+    println("TOTAL NUMBER OF GAMES: " + totalGames)
+    connection1.close()
+
+    return totalTurns - totalGames
   }
 
   def readPasswordFromFile() : String = {

@@ -95,15 +95,24 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
 
   /**
    * Gets this turn's list of orders (the orders that resulted in this turn's board state)
-   * as an INDArray of 21 x 21, where 0 means a unit occupying that space either HOLD'd, CONVOY'd,
-   * or SUPPORT'd to HOLD, and a 255 means a unit occupying that space either MOVE'd or
+   * as an INDArray of 21 x 21, where 0 means a unit occupying that space either HOLD'd
+   * or SUPPORT'd to HOLD, and a 255 means a unit occupying that space either MOVE'd, CONVOY'd, or
    * SUPPORT'd to MOVE.
    */
   def getOrderMaskAsHoldsOrMoves() : INDArray = {
-    // TODO
-    val blah = Nd4j.zeros(1, 21, 21)
-    blah.putScalar(Array[Int](0, 0, 15), 1)
-    return blah
+    var mask = Nd4j.ones(1, 21, 21).mul(128)
+    for (u <- board.units) {
+      val uOrder = getOrderByUnit(u.unitId)
+      val v = uOrder.orderType match {
+        case Move() => 255
+        case Hold() => 0
+        case Convoy() => 255
+        case Support() => if (uOrder.isSupportToHold()) 0 else 255
+        case _ => if (util.Random.nextInt(100) < 50) 255 else 0
+      }
+      mask = board.putValueByLocation(v, u.location, mask)
+    }
+    return mask
   }
 
   /**
