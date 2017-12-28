@@ -25,8 +25,12 @@ class Game(val gameId: Int) {
   val turns = lb.toList
   var curTurn = turns(0)
 
+  def testMasks() : List[String] = {
+    return curTurn.testBoardStateLocationMasks()
+  }
+
   def getNumChannelsHoldOrMove() : Int = {
-    return turns(0).getHoldOrMoveMatrix().shape()(2)
+    return turns(0).getHoldOrMoveMatrix().shape()(0)
   }
 
   def getNumOutcomesHoldOrMove() : Int = {

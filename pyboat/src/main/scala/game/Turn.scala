@@ -35,6 +35,15 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     return "Turn " + turnNum + ": " + season + " " + phase + " " + year + " gID: " + gameId
   }
 
+  def testBoardStateLocationMasks() : List[String] = {
+    val strs: List[String] = (for (loc <- AllowedLocations.allowedLocations) yield board.testLookupTable(loc))(collection.breakOut)
+    return strs
+  }
+
+  def testAllMasks() : String = {
+    return board.testAllMasks()
+  }
+
   /**
    * Gets this turn's BoardState as an INDArray of 21 x 21 x 7, where:
    * channel 0: 0   -> no unit here
@@ -72,15 +81,15 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     val channel2 = board.getUnitOwnershipMask()
     val channel3 = board.getLandTypeMask()
     val channel4 = board.getLandOwnershipMask()
-    val channel5 = if (season == Spring()) Nd4j.zeros(21, 21) else Nd4j.ones(21, 21).mul(255)
+    val channel5 = if (season == Spring()) Nd4j.zeros(1, 21, 21) else Nd4j.ones(1, 21, 21).mul(255)
     val channel6 = board.getSCMask()
 
-    var matrix = Nd4j.concat(2, channel0, channel1)
-    matrix = Nd4j.concat(2, channel1, channel2)
-    matrix = Nd4j.concat(2, channel2, channel3)
-    matrix = Nd4j.concat(2, channel3, channel4)
-    matrix = Nd4j.concat(2, channel4, channel5)
-    matrix = Nd4j.concat(2, channel5, channel6)
+    var matrix = Nd4j.concat(0, channel0, channel1)
+    matrix = Nd4j.concat(0, matrix, channel2)
+    matrix = Nd4j.concat(0, matrix, channel3)
+    matrix = Nd4j.concat(0, matrix, channel4)
+    matrix = Nd4j.concat(0, matrix, channel5)
+    matrix = Nd4j.concat(0, matrix, channel6)
     return matrix
   }
 
@@ -92,8 +101,8 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    */
   def getOrderMaskAsHoldsOrMoves() : INDArray = {
     // TODO
-    val blah = Nd4j.zeros(21, 21)
-    blah.putScalar(Array[Int](0, 15), 1)
+    val blah = Nd4j.zeros(1, 21, 21)
+    blah.putScalar(Array[Int](0, 0, 15), 1)
     return blah
   }
 

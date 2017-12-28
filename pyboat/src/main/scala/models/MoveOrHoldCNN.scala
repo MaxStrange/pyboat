@@ -127,6 +127,10 @@ class CNNDataFetcher() extends BaseDataFetcher {
       //If this happens, there is something wrong with totalExamples (because we ran out of games before we were supposed to)
       require(curGame != null)
       val (turn, label) = curGame.getNextHoldOrMoveMatrix()
+      val shape = turn.shape()
+      println("TURN:")
+      for (s <- shape)
+        println(s)
       lb += new DataSet(turn, label)
     }
     val examples = lb.toList

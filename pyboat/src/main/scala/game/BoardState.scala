@@ -21,6 +21,36 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
     throw new NullPointerException("No unit with unitId: " + unitId)
   }
 
+  /**
+   * Returns a String representation of the map with
+   * the value 1 at loc and 0 everywhere else.
+   */
+  def testLookupTable(loc: String) : String = {
+    require(AllowedLocations.contains(loc))
+    var arr = Nd4j.zeros(1, 21, 21)
+    arr = putValueByLocation(1, loc, arr)
+    return "=================" + loc + "==============\n" + arr.toString()
+  }
+
+  /**
+   * Returns a String representation of the map
+   * with a different value for each location, where each
+   * value is part of a linear space across the range [0, 255].
+   */
+  def testAllMasks() : String = {
+    var arr = Nd4j.zeros(1, 21, 21)
+    val vals = Nd4j.linspace(0, 255, AllowedLocations.allowedLocations.size)
+    println("Vals: " + vals)
+    var index = 0
+    for (loc <- AllowedLocations.allowedLocations) {
+      val v = vals.getDouble(index).toInt
+      println("Setting " + loc + " to " + v)
+      arr = putValueByLocation(v, loc, arr)
+      index += 1
+    }
+    return arr.toString()
+  }
+
   def historyString() : String = {
     var sb = StringBuilder.newBuilder
     sb.append("    BOARD STATE:\n")
@@ -115,16 +145,20 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
   def getLandOwnershipMask() : INDArray = {
     var arr = Nd4j.zeros(1, 21, 21)
     for (loc <- AllowedLocations.allowedLocations ) {
-      val v = ownershipMatrix(loc) match {
-        case Austria() => 36
-        case England() => 72
-        case France()  => 109
-        case Germany() => 145
-        case Italy()   => 182
-        case Russia()  => 218
-        case Turkey()  => 255
+      if (ownershipMatrix.contains(loc)) {
+        val v = ownershipMatrix(loc) match {
+          case Austria() => 36
+          case England() => 72
+          case France()  => 109
+          case Germany() => 145
+          case Italy()   => 182
+          case Russia()  => 218
+          case Turkey()  => 255
+        }
+        arr = putValueByLocation(v, loc, arr)
+      } else {
+        arr = putValueByLocation(0, loc, arr)
       }
-      arr = putValueByLocation(v, loc, arr)
     }
     return arr
   }
@@ -154,10 +188,11 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
     require(rIndexes.length == cIndexes.length)
 
     var newArr = arr
+    val zero = NDArrayIndex.interval(0, 1)
     for (i <- 0 until rIndexes.length) {
       val (rIndex, cIndex) = (rIndexes(i), cIndexes(i))
-      val vs = Nd4j.ones(rIndex.length().toInt, cIndex.length().toInt).mul(v)
-      newArr = arr.put(Array(1, rIndex, cIndex), vs)
+      val vs = Nd4j.ones(1, rIndex.length().toInt, cIndex.length().toInt).mul(v)
+      newArr.put(Array(zero, rIndex, cIndex), vs)
     }
     return newArr
   }
@@ -171,8 +206,7 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
                                        List[NDArrayIndex]{0 until 3, 0 until 2, 0 until 3})
    */
   private def getLocationIndexes(loc: String) : (List[INDArrayIndex], List[INDArrayIndex]) = {
-    //TODO
-    val (rIndex, cIndex): (INDArrayIndex, INDArrayIndex) = loc match {
+    val (rIndexes, cIndexes): (List[INDArrayIndex], List[INDArrayIndex]) = loc match {
       case "Edinburgh" =>       (List(NDArrayIndex.interval(1, 3)), List(NDArrayIndex.interval(4, 5)))
       case "Liverpool" =>       (List(NDArrayIndex.interval(2, 4)), List(NDArrayIndex.interval(3, 4)))
       case "London" =>          (List(NDArrayIndex.interval(5, 6)), List(NDArrayIndex.interval(4, 6)))
@@ -186,30 +220,30 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
       case "Berlin" =>          (List(NDArrayIndex.interval(8, 10)), List(NDArrayIndex.interval(11, 13)))
       case "Kiel" =>            (List(NDArrayIndex.interval(8, 10)), List(NDArrayIndex.interval(7, 11)))
       case "Vienna" =>          (List(NDArrayIndex.interval(12, 13)), List(NDArrayIndex.interval(9, 13)))
-      case "Trieste" =>         (List(NDArrayIndex.interval(14, 17)), List(NDArrayIndex.interval(9, 12)))
-      case "Budapest" =>        (List(NDArrayIndex.interval(14, 15)), List(NDArrayIndex.interval(12, 15)))
-      case "Constantinople" =>  (List(NDArrayIndex.interval(17, 20)), List(NDArrayIndex.interval(18, 19)))
-      case "Ankara" =>          (List(NDArrayIndex.interval(17, 19)), List(NDArrayIndex.interval(19, 20)))
-      case "Smyrna" =>          (List(NDArrayIndex.interval(19, 21)), List(NDArrayIndex.interval(19, 20)))
+      case "Trieste" =>         (List(NDArrayIndex.interval(13, 16)), List(NDArrayIndex.interval(9, 12)))
+      case "Budapest" =>        (List(NDArrayIndex.interval(13, 14)), List(NDArrayIndex.interval(12, 15)))
+      case "Constantinople" =>  (List(NDArrayIndex.interval(16, 19)), List(NDArrayIndex.interval(18, 19)))
+      case "Ankara" =>          (List(NDArrayIndex.interval(16, 18)), List(NDArrayIndex.interval(19, 20)))
+      case "Smyrna" =>          (List(NDArrayIndex.interval(18, 20)), List(NDArrayIndex.interval(19, 20)))
       case "Moscow" =>          (List(NDArrayIndex.interval(9, 11)), List(NDArrayIndex.interval(16, 21)))
       case "St. Petersburg (South Coast)" =>
                                 (List(NDArrayIndex.interval(5, 9)), List(NDArrayIndex.interval(20, 21)))
       case "Warsaw" =>          (List(NDArrayIndex.interval(10, 12)), List(NDArrayIndex.interval(14, 16)))
-      case "Sevastopol" =>      (List(NDArrayIndex.interval(12, 13)), List(NDArrayIndex.interval(17, 21)))
+      case "Sevastopol" =>      (List(NDArrayIndex.interval(11, 12)), List(NDArrayIndex.interval(17, 21)))
       case "Norwegian Sea" =>   (List(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(1, 3)),
                                  List(NDArrayIndex.interval(3, 11), NDArrayIndex.interval(9, 11)))
       case "Yorkshire" =>       (List(NDArrayIndex.interval(3, 5)), List(NDArrayIndex.interval(4, 5)))
       case "North Sea" =>       (List(NDArrayIndex.interval(1, 4), NDArrayIndex.interval(4, 5), NDArrayIndex.interval(5, 6), NDArrayIndex.interval(6, 7)),
                                  List(NDArrayIndex.interval(5, 9), NDArrayIndex.interval(5, 8), NDArrayIndex.interval(5, 9), NDArrayIndex.interval(5, 8)))
       case "Spain" =>           (List(NDArrayIndex.interval(12, 13), NDArrayIndex.interval(13, 16)),
-                                 List(NDArrayIndex.interval(2, 3), NDArrayIndex.interval(3, 4)))
+                                 List(NDArrayIndex.interval(2, 4), NDArrayIndex.interval(3, 4)))
       case "Picardy" =>         (List(NDArrayIndex.interval(8, 9)), List(NDArrayIndex.interval(2, 5)))
       case "Mid-Atlantic Ocean" =>
-                                (List(NDArrayIndex.interval(3, 19), NDArrayIndex.interval(12, 15), NDArrayIndex.interval(15, 16),
-                                 List(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(1, 2), NDArrayIndex.interval(2, 3)))
+                                (List(NDArrayIndex.interval(3, 19), NDArrayIndex.interval(12, 15), NDArrayIndex.interval(15, 16)),
+                                 List(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(0, 2), NDArrayIndex.interval(0, 3)))
       case "Tyrrhenian Sea" =>  (List(NDArrayIndex.interval(17, 19), NDArrayIndex.interval(18, 20)),
-                                 List(NDArrayIndex.interval(4, 5)), NDArrayIndex.interval(5, 7))
-      case "Silesia" =>         (List(NDArrayIndex.interval(11, 12)), List(NDArrayIndex.interval(12, 14)))
+                                 List(NDArrayIndex.interval(4, 5), NDArrayIndex.interval(5, 7)))
+      case "Silesia" =>         (List(NDArrayIndex.interval(10, 11)), List(NDArrayIndex.interval(12, 14)))
       case "Holland" =>         (List(NDArrayIndex.interval(7, 8)), List(NDArrayIndex.interval(6, 8)))
       case "Albania" =>         (List(NDArrayIndex.interval(16, 17)), List(NDArrayIndex.interval(11, 13)))
       case "Serbia" =>          (List(NDArrayIndex.interval(14, 16)), List(NDArrayIndex.interval(12, 15)))
@@ -224,14 +258,14 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
       case "Tunis" =>           (List(NDArrayIndex.interval(19, 21)), List(NDArrayIndex.interval(3, 5)))
       case "Galicia" =>         (List(NDArrayIndex.interval(11, 13)), List(NDArrayIndex.interval(13, 15)))
       case "Greece" =>          (List(NDArrayIndex.interval(16, 18)), List(NDArrayIndex.interval(13, 15)))
-      case "Black Sea" =>       (List(NDArrayIndex.interval(18, 20)), List(NDArrayIndex.interval(12, 16)))
+      case "Black Sea" =>       (List(NDArrayIndex.interval(12, 16)), List(NDArrayIndex.interval(18, 20)))
       case "Rumania" =>         (List(NDArrayIndex.interval(12, 15)), List(NDArrayIndex.interval(15, 18)))
       case "Sweden" =>          (List(NDArrayIndex.interval(4, 6)), List(NDArrayIndex.interval(10, 16)))
       case "Finland" =>         (List(NDArrayIndex.interval(4, 6)), List(NDArrayIndex.interval(16, 20)))
       case "Helgoland Bight" => (List(NDArrayIndex.interval(6, 8)), List(NDArrayIndex.interval(8, 9)))
       case "Burgundy" =>        (List(NDArrayIndex.interval(9, 11)), List(NDArrayIndex.interval(4, 6)))
       case "English Channel" => (List(NDArrayIndex.interval(6, 8)), List(NDArrayIndex.interval(1, 5)))
-      case "Tyrolia" =>         (List(NDArrayIndex.interval(10, 13)), List(NDArrayIndex.interval(7, 9)))
+      case "Tyrolia" =>         (List(NDArrayIndex.interval(11, 14)), List(NDArrayIndex.interval(7, 9)))
       case "Ionian Sea" =>      (List(NDArrayIndex.interval(17, 18), NDArrayIndex.interval(18, 20), NDArrayIndex.interval(20, 21)),
                                  List(NDArrayIndex.interval(10, 13), NDArrayIndex.interval(10, 14), NDArrayIndex.interval(5, 14)))
       case "Denmark" =>         (List(NDArrayIndex.interval(5, 8)), List(NDArrayIndex.interval(9, 10)))
@@ -244,14 +278,14 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
       case "North Atlantic Ocean" =>
                                 (List(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(1, 2), NDArrayIndex.interval(2, 3)),
                                  List(NDArrayIndex.interval(0, 3), NDArrayIndex.interval(0, 2), NDArrayIndex.interval(0, 3)))
-      case "Ruhr" =>            (List(NDArrayIndex.interval(8, 10), NDArrayIndex.interval(6, 7)))
-      case "Apulia" =>          (List(NDArrayIndex.interval(17, 19)), NDArrayIndex.interval(8, 10))
+      case "Ruhr" =>            (List(NDArrayIndex.interval(8, 10)), List(NDArrayIndex.interval(6, 7)))
+      case "Apulia" =>          (List(NDArrayIndex.interval(17, 19)), List(NDArrayIndex.interval(8, 10)))
       case "Aegean Sea" =>      (List(NDArrayIndex.interval(18, 19), NDArrayIndex.interval(19, 20)),
                                  List(NDArrayIndex.interval(14, 18), NDArrayIndex.interval(14, 19)))
-      case "Skagerrack" =>      (List(NDArrayIndex.interval(4, 5)), NDArrayIndex.interval(8, 10))
+      case "Skagerrack" =>      (List(NDArrayIndex.interval(4, 5)), List(NDArrayIndex.interval(8, 10)))
       case "Gascony" =>         (List(NDArrayIndex.interval(10, 12)), List(NDArrayIndex.interval(1, 4)))
       case "Prussia" =>         (List(NDArrayIndex.interval(8, 10)), List(NDArrayIndex.interval(13, 14)))
-      case "Barents Sea" =>     (List(NDArrayIndex.interval(2, 3)), List(NDArrayIndex.interval(11, 21)))
+      case "Barents Sea" =>     (List(NDArrayIndex.interval(0, 3)), List(NDArrayIndex.interval(11, 21)))
       case "Bohemia" =>         (List(NDArrayIndex.interval(11, 12)), List(NDArrayIndex.interval(9, 13)))
       case "Western Mediterranean" =>
                                 (List(NDArrayIndex.interval(16, 19)), List(NDArrayIndex.interval(1, 4)))
@@ -274,6 +308,6 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
                                 (List(NDArrayIndex.interval(15, 17)), List(NDArrayIndex.interval(16, 18)))
       case "Switzerland" =>     (List(NDArrayIndex.interval(11, 12)), List(NDArrayIndex.interval(5, 7)))
     }
-    return (rIndex, cIndex)
+    return (rIndexes, cIndexes)
   }
 }
