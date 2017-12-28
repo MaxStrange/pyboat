@@ -40,11 +40,9 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
   def testAllMasks() : String = {
     var arr = Nd4j.zeros(1, 21, 21)
     val vals = Nd4j.linspace(0, 255, AllowedLocations.allowedLocations.size)
-    println("Vals: " + vals)
     var index = 0
     for (loc <- AllowedLocations.allowedLocations) {
       val v = vals.getDouble(index).toInt
-      println("Setting " + loc + " to " + v)
       arr = putValueByLocation(v, loc, arr)
       index += 1
     }
@@ -191,7 +189,7 @@ class BoardState(val units: List[DipUnit], val ownershipMatrix: Map[String, Coun
    * @param loc The location name
    * @param arr A 1 x 21 x 21 INDArray to put the value into
    */
-  def putValueByLocation(v: Int, loc: String, arr: INDArray) : INDArray = {
+  def putValueByLocation(v: Double, loc: String, arr: INDArray) : INDArray = {
     require(AllowedLocations.contains(loc))
 
     val (rIndexes, cIndexes) = getLocationIndexes(loc)

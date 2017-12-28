@@ -42,17 +42,7 @@ class Game(val gameId: Int) {
   }
 
   def hasNextHoldOrMoveMatrix() : Boolean = {
-    // Only return true if there is another spring/fall orders left
-    val allTurnsAfterThisOne = turns.dropWhile(x => x.turnNum != curTurn.turnNum).drop(1)
-    for (t <- allTurnsAfterThisOne) {
-      if (turnIsSpringOrFallAndOrders(t))
-        return true
-    }
-    return false
-  }
-
-  private def turnIsSpringOrFallAndOrders(t: Turn) : Boolean = {
-    return (t.season == Spring() || t.season == Fall()) && (t.phase == OrdersPhase())
+    return curTurn.turnNum < turns.length - 1
   }
 
   def getNextHoldOrMoveMatrix() : (INDArray, INDArray) = {
@@ -60,8 +50,8 @@ class Game(val gameId: Int) {
     val mat = curTurn.getHoldOrMoveMatrix()
 
     // Move curTurn to the next Spring/Fall Orders phase
-    val allTurnsAfterThisOne = turns.dropWhile(x => x.turnNum != curTurn.turnNum)
-    curTurn = allTurnsAfterThisOne.dropWhile(x => !turnIsSpringOrFallAndOrders(x))(0)
+    val allTurnsAfterThisOne = turns.dropWhile(x => x.turnNum != curTurn.turnNum).drop(1)
+    curTurn = allTurnsAfterThisOne(0)
 
     val label = curTurn.getOrderMaskAsHoldsOrMoves()
     return (mat, label)

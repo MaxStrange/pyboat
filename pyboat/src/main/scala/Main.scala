@@ -2,6 +2,7 @@ package pyboat
 
 import pyboat.models.ModelArch
 import pyboat.models.MoveOrHoldCNN
+import pyboat.models.MoveOrHoldMLP
 import pyboat.models.XorFullyConnected
 
 import java.io.File
@@ -28,16 +29,49 @@ object PyBoat {
     val networkConf: MultiLayerConfiguration = architecture match {
       case XorFullyConnected() => XorFullyConnected().getConfiguration()
       case MoveOrHoldCNN() => MoveOrHoldCNN().getConfiguration()
+      case MoveOrHoldMLP() => MoveOrHoldMLP().getConfiguration()
     }
 
     val dsItr: BaseDatasetIterator = architecture match {
       case XorFullyConnected() => XorFullyConnected().getDatasetIterator()
       case MoveOrHoldCNN() => MoveOrHoldCNN().getDatasetIterator()
+      case MoveOrHoldMLP() => MoveOrHoldMLP().getDatasetIterator()
     }
 
     println("Building network...")
     val net = new MultiLayerNetwork(networkConf)
     net.init()
+
+    ///////////////////////////////////////////////////
+    // Manually output a forward pass of the network //
+    ///////////////////////////////////////////////////
+    //val manualOutput: INDArray = net.output(dsItr.next().getFeatureMatrix)
+    //dsItr.reset()
+    //println(manualOutput)
+
+    //val manualEval: Evaluation = new Evaluation(2)
+    //manualEval.eval(dsItr.next().getLabels, manualOutput)
+    //dsItr.reset()
+    //println(manualEval.stats)
+
+    //// Feed forward
+    //val dataNext = dsItr.next()
+    //val activations = net.feedForward(dataNext.getFeatureMatrix)
+    //println("ACTIVATIONS: " + activations)
+
+    //// Get the gradients
+    //net.setLabels(dataNext.getLabels)
+    //val grad = net.gradient()
+    //println("GRADIENT: " + grad)
+
+    //val errSignal = net.scoreExamples(dataNext, true)
+    //println("ERR SIGNAL: " + errSignal)
+    ////val err = net.error(errSignal)
+
+    //// Fit and check
+    //net.fit(dataNext)
+    //println("ACTIVATIONS AFTER FITTING: " + net.feedForward(dataNext.getFeatureMatrix))
+    ///////////////////////////////////////////////////
 
     println("Initializing UI server...")
     val uiServer = UIServer.getInstance()
@@ -49,10 +83,19 @@ object PyBoat {
     net.setListeners(new StatsListener(statsStorage))
 
     println("Training...")
-    var i = 0
+    var i: Int = 0
     while (dsItr.hasNext()) {
       val ds = dsItr.next()
       net.fit(ds)
+      i += 1
+      if (i % 10 == 0) {
+        val out = net.output(ds.getFeatureMatrix)
+        var s = ""
+        for (j <- out.shape)
+          s += j + " "
+        println("Shape: " + s)
+        println("Value of [0, 0]: " + out.getDouble(0, 0))
+      }
     }
     dsItr.reset()
 

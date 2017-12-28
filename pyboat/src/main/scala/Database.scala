@@ -26,14 +26,12 @@ object Database {
 
     rs.next()
     val totalTurns = rs.getInt("total")
-    println("TOTAL NUMBER OF TURNS: " + totalTurns)
     connection.close()
 
     var (rs1, connection1) = query(gamesStatement)
 
     rs1.next()
     val totalGames = rs1.getInt("total")
-    println("TOTAL NUMBER OF GAMES: " + totalGames)
     connection1.close()
 
     return totalTurns - totalGames
@@ -97,7 +95,6 @@ object Database {
     // Figure out where the unit is located by asking for its first order and retrieving location from that
     // If this isn't a starting unit, this won't work and we will just let its location be null
     val locationStat = "SELECT * FROM orders WHERE game_id=" + gameId + " AND unit_id=" + unitId + " AND turn_num=1"
-    //println(locationStat)
     val lrs = connection.createStatement().executeQuery(locationStat)
     val location = if (lrs.next()) lrs.getString("location") else null
 
@@ -209,7 +206,6 @@ object Database {
    * Don't forget to close the connection!
    */
   def query(sqlStatement: String) : (java.sql.ResultSet, Connection) = {
-    //println(sqlStatement)
     var connection : Connection = null
     Class.forName(driver)
     connection = DriverManager.getConnection(url, username, password)

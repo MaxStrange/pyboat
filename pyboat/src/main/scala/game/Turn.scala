@@ -72,7 +72,10 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    *            255 -> location is owned by Turkey
    * channel 5: 0   -> season is Spring
    *            255 -> season is Fall
-   * channel 6: 0   -> location is not an SC
+   * channel 6: 0   -> phase is retreat
+   *            128 -> phase is build
+   *            255 -> phase is orders/winter
+   * channel 7: 0   -> location is not an SC
    *            255 -> location is an SC
    */
   def getHoldOrMoveMatrix() : INDArray = {
@@ -82,7 +85,13 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     val channel3 = board.getLandTypeMask()
     val channel4 = board.getLandOwnershipMask()
     val channel5 = if (season == Spring()) Nd4j.zeros(1, 21, 21) else Nd4j.ones(1, 21, 21).mul(255)
-    val channel6 = board.getSCMask()
+    val channel6 = phase match {
+      case WinterPhase()  => Nd4j.ones(1, 21, 21).mul(255)
+      case OrdersPhase()   => Nd4j.ones(1, 21, 21).mul(255)
+      case RetreatPhase() => Nd4j.zeros(1, 21, 21)
+      case BuildPhase()   => Nd4j.ones(1, 21, 21).mul(128)
+    }
+    val channel7 = board.getSCMask()
 
     var matrix = Nd4j.concat(0, channel0, channel1)
     matrix = Nd4j.concat(0, matrix, channel2)
@@ -90,29 +99,75 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     matrix = Nd4j.concat(0, matrix, channel4)
     matrix = Nd4j.concat(0, matrix, channel5)
     matrix = Nd4j.concat(0, matrix, channel6)
+    matrix = Nd4j.concat(0, matrix, channel7)
     return matrix
   }
 
   /**
    * Gets this turn's list of orders (the orders that resulted in this turn's board state)
-   * as an INDArray of 21 x 21, where 0 means a unit occupying that space either HOLD'd
-   * or SUPPORT'd to HOLD, and a 255 means a unit occupying that space either MOVE'd, CONVOY'd, or
-   * SUPPORT'd to MOVE.
+   * as an INDArray of 1 x 21 x 21, where 0 means a unit occupying that space either HOLD'd
+   * or SUPPORT'd to HOLD, a 1 means a unit occupying that space either MOVE'd, CONVOY'd, or
+   * SUPPORT'd to MOVE, and a 0.5 means that there is no order for that location.
    */
   def getOrderMaskAsHoldsOrMoves() : INDArray = {
-    var mask = Nd4j.ones(1, 21, 21).mul(128)
+    var mask = Nd4j.ones(1, 21, 21).mul(0.5)
     for (u <- board.units) {
-      val uOrder = getOrderByUnit(u.unitId)
-      val v = uOrder.orderType match {
-        case Move() => 255
-        case Hold() => 0
-        case Convoy() => 255
-        case Support() => if (uOrder.isSupportToHold()) 0 else 255
-        case _ => if (util.Random.nextInt(100) < 50) 255 else 0
+      /* For each unit, get that unit's order - if we can't find it, it is because it was a destroy order */
+      var uOrder: OrderType = null
+      var orderIsSupportToHold = false
+      try {
+        val fullOrderObject = getOrderByUnit(u.unitId)
+        uOrder = fullOrderObject.orderType
+        orderIsSupportToHold = fullOrderObject.isSupportToHold()
+      } catch {
+        case npe: NullPointerException => uOrder = Destroy()
       }
+
+      /* Now look up the correct value to associate with that order */
+      val v = uOrder match {
+        case Move() => 1.0
+        case Hold() => 0.0
+        case Convoy() => 1.0
+        case Support() => if (orderIsSupportToHold) 0.0 else 1.0
+        case Retreat() => 1.0
+        case Build() => 0.0
+        case Destroy() => 0.0
+      }
+
+      /* Put that value into the right location on the board */
       mask = board.putValueByLocation(v, u.location, mask)
     }
     return mask
+  }
+
+  def getOrderMaskAsHoldsOrMoves_DEBUG() : INDArray = {
+    var sum: Double = 0
+    for (u <- board.units) {
+      /* For each unit, get that unit's order - if we can't find it, it is because it was a destroy order */
+      var uOrder: OrderType = null
+      var orderIsSupportToHold = false
+      try {
+        val fullOrderObject = getOrderByUnit(u.unitId)
+        uOrder = fullOrderObject.orderType
+        orderIsSupportToHold = fullOrderObject.isSupportToHold()
+      } catch {
+        case npe: NullPointerException => uOrder = Destroy()
+      }
+
+      /* Now look up the correct value to associate with that order */
+      val v = uOrder match {
+        case Move() => 1.0
+        case Hold() => 0.0
+        case Convoy() => 1.0
+        case Support() => if (orderIsSupportToHold) 0.0 else 1.0
+        case Retreat() => 1.0
+        case Build() => 0.0
+        case Destroy() => 0.0
+      }
+      sum += v
+    }
+    val avg = sum / board.units.length
+    return if (avg > 0.5) Nd4j.ones(1, 1, 1) else Nd4j.zeros(1, 1, 1)
   }
 
   /**

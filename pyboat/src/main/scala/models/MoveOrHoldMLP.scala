@@ -26,62 +26,49 @@ import org.nd4j.linalg.factory.Nd4j
 import org.nd4j.linalg.lossfunctions.LossFunctions
 import org.nd4j.linalg.api.ndarray.INDArray
 
-case class MoveOrHoldCNN() extends ModelArch {
+case class MoveOrHoldMLP() extends ModelArch {
   Nd4j.ENFORCE_NUMERICAL_STABILITY = true
-  val batchSize = 16
-  val fetcher = new CNNDataFetcher()
+  val batchSize = 1
+  val fetcher = new MLPDataFetcher()
 
   def getConfiguration() : MultiLayerConfiguration = {
     val builder = new NeuralNetConfiguration.Builder
     builder.seed(123)
     builder.iterations(1)
-    //builder.regularization(true).l2(0.0005)
-    builder.learningRate(0.05)
+    builder.regularization(true).l2(0.0005)
+    builder.learningRate(0.01)
     builder.weightInit(WeightInit.XAVIER)
     builder.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
     builder.updater(Updater.NESTEROVS).momentum(0.9)
 
     val listBuilder = builder.list
 
-    val cnnBuilder0 = new ConvolutionLayer.Builder(5, 5)
-    cnnBuilder0.nIn(fetcher.nChannels)
-    cnnBuilder0.stride(1, 1)
-    cnnBuilder0.nOut(20) //number of filters in this layer
-    cnnBuilder0.activation(Activation.SIGMOID)
-    listBuilder.layer(0, cnnBuilder0.build)
-
-    val subsamp0 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
-    subsamp0.kernelSize(2, 2)
-    subsamp0.stride(2, 2)
-    listBuilder.layer(1, subsamp0.build)
-
-    val cnnBuilder1 = new ConvolutionLayer.Builder(5, 5)
-    cnnBuilder1.stride(1, 1)
-    cnnBuilder1.nOut(50)
-    cnnBuilder1.activation(Activation.SIGMOID)
-    listBuilder.layer(2, cnnBuilder1.build)
-
-    val subsamp1 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
-    subsamp1.kernelSize(2, 2)
-    subsamp1.stride(2, 2)
-    listBuilder.layer(3, subsamp1.build)
-
-    val dense = new DenseLayer.Builder
-    dense.activation(Activation.SIGMOID)
-    dense.nOut(1024)
-    listBuilder.layer(4, dense.build)
+    val dense0 = new DenseLayer.Builder
+    dense0.activation(Activation.SIGMOID)
+    dense0.nIn(21 * 21 * fetcher.nChannels)
+    dense0.nOut(2048)
+    listBuilder.layer(0, dense0.build)
 
     val dense1 = new DenseLayer.Builder
     dense1.activation(Activation.SIGMOID)
-    dense1.nOut(512)
-    listBuilder.layer(5, dense1.build)
+    dense1.nOut(1024)
+    listBuilder.layer(1, dense1.build)
+
+    val dense2 = new DenseLayer.Builder
+    dense2.activation(Activation.SIGMOID)
+    dense2.nOut(512)
+    listBuilder.layer(2, dense2.build)
+
+    val dense3 = new DenseLayer.Builder
+    dense3.activation(Activation.SIGMOID)
+    dense3.nOut(256)
+    listBuilder.layer(3, dense3.build)
 
     val output = new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
     output.nOut(21 * 21)
     output.activation(Activation.SIGMOID)
-    listBuilder.layer(6, output.build)
+    listBuilder.layer(4, output.build)
 
-    listBuilder.setInputType(InputType.convolutionalFlat(21, 21, fetcher.nChannels))
     listBuilder.backprop(true)
     listBuilder.pretrain(false)
     val conf = listBuilder.build
@@ -91,11 +78,11 @@ case class MoveOrHoldCNN() extends ModelArch {
   }
 
   def getDatasetIterator() : BaseDatasetIterator = {
-    return new CNNDatasetIterator(batchSize, fetcher.totalExamples, fetcher)
+    return new MLPDatasetIterator(batchSize, fetcher.totalExamples, fetcher)
   }
 }
 
-class CNNDataFetcher() extends BaseDataFetcher {
+class MLPDataFetcher() extends BaseDataFetcher {
   val shuffledGameIds = util.Random.shuffle(Database.getAllGameIds())
   var curGame = new Game(shuffledGameIds(0))
   val nChannels = curGame.getNumChannelsHoldOrMove()
@@ -138,8 +125,9 @@ class CNNDataFetcher() extends BaseDataFetcher {
       //If this happens, there is something wrong with totalExamples (because we ran out of games before we were supposed to)
       require(curGame != null)
       val (turn, label) = curGame.getNextHoldOrMoveMatrix()
+      val turnFlat = Nd4j.toFlattened(turn)
       val labelFlat = Nd4j.toFlattened(label)
-      lb += new DataSet(turn, labelFlat)
+      lb += new DataSet(turnFlat, labelFlat)
     }
     val examples = lb.toList
     initializeCurrFromList(examples.asJava)
@@ -159,7 +147,7 @@ class CNNDataFetcher() extends BaseDataFetcher {
   }
 }
 
-class CNNDatasetIterator(batchSize: Int, numExamples: Int, fetcher: DataSetFetcher) extends BaseDatasetIterator(batchSize, numExamples, fetcher) {
+class MLPDatasetIterator(batchSize: Int, numExamples: Int, fetcher: DataSetFetcher) extends BaseDatasetIterator(batchSize, numExamples, fetcher) {
   batch = batchSize
   println("Initializing iterator. BatchSize: " + batch + " Number of examples: " + numExamples)
 }
