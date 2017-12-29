@@ -28,7 +28,7 @@ class Order(val gameId : Int, val unitId : Int, val orderType : OrderType,
   }
 
   def isSupportToHold() : Boolean = {
-    return (this == Support()) && (target == targetDest)
+    return (orderType == Support()) && (target == targetDest)
   }
 
   override def toString() : String = {

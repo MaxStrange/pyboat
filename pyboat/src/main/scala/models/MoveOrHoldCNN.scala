@@ -18,13 +18,20 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer.Builder
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer
 import org.deeplearning4j.nn.weights.WeightInit
 import org.nd4j.linalg.activations.Activation
+import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.linalg.api.iter.NdIndexIterator
 import org.nd4j.linalg.dataset.api.iterator.BaseDatasetIterator
 import org.nd4j.linalg.dataset.api.iterator.fetcher.BaseDataFetcher
 import org.nd4j.linalg.dataset.api.iterator.fetcher.DataSetFetcher
 import org.nd4j.linalg.dataset.DataSet
 import org.nd4j.linalg.factory.Nd4j
 import org.nd4j.linalg.lossfunctions.LossFunctions
+import org.nd4j.linalg.lossfunctions.impl.LossBinaryXENT
+import org.nd4j.linalg.activations.IActivation
 import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.linalg.lossfunctions.ILossFunction
+import org.nd4j.linalg.ops.transforms.Transforms
+import org.nd4j.linalg.primitives.Pair
 
 case class MoveOrHoldCNN() extends ModelArch {
   Nd4j.ENFORCE_NUMERICAL_STABILITY = true
@@ -86,7 +93,6 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.pretrain(false)
     val conf = listBuilder.build
 
-    // TODO: make loss function ignore non-unit locations in the label
     return conf
   }
 
@@ -113,13 +119,15 @@ class CNNDataFetcher() extends BaseDataFetcher {
     require(!examples.isEmpty)
     val inputs = createInputMatrix(examples.size())
     val labels = createOutputMatrix(examples.size())
+    val masks = createOutputMatrix(examples.size())
     for (i <- 0 until examples.size()) {
       val nextInput = examples.get(i).getFeatureMatrix()
       val nextLabel = examples.get(i).getLabels()
       inputs.putRow(i, examples.get(i).getFeatureMatrix())
       labels.putRow(i, examples.get(i).getLabels())
+      masks.putRow(i, examples.get(i).getLabelsMaskArray())
     }
-    curr = new DataSet(inputs, labels)
+    curr = new DataSet(inputs, labels, null, masks)
   }
 
   /**
@@ -139,7 +147,15 @@ class CNNDataFetcher() extends BaseDataFetcher {
       require(curGame != null)
       val (turn, label) = curGame.getNextHoldOrMoveMatrix()
       val labelFlat = Nd4j.toFlattened(label)
-      lb += new DataSet(turn, labelFlat)
+      val labelMask = labelFlat.dup()
+      val iter = new NdIndexIterator(labelMask.shape()(1))
+      while (iter.hasNext()) {
+        val nextIndex = iter.next()(0)
+        val nextVal = labelFlat.getDouble(nextIndex)
+        val maskVal = if (nextVal + 0.001 > 0.5 && nextVal - 0.001 < 0.5) 0 else 1
+        labelMask.putScalar(nextIndex, maskVal)
+      }
+      lb += new DataSet(turn, labelFlat, null, labelMask)
     }
     val examples = lb.toList
     initializeCurrFromList(examples.asJava)
@@ -151,11 +167,15 @@ class CNNDataFetcher() extends BaseDataFetcher {
    * is done, this will set it to null.
    */
   def fetchNextGame() = {
-    val ls = shuffledGameIds.dropWhile(i => i != curGame.id).drop(1)
+    //TODO: FIXME: DEBUG ////
+    val ls = shuffledGameIds.dropWhile(i => i != curGame.id) //always just return the same game
+    /////////////////////////
+    //val ls = shuffledGameIds.dropWhile(i => i != curGame.id).drop(1)
     if (ls.length == 0)
       curGame = null
     else
       curGame = new Game(ls(0))
+    println("GAME ID: " + curGame.id)
   }
 }
 
@@ -163,3 +183,41 @@ class CNNDatasetIterator(batchSize: Int, numExamples: Int, fetcher: DataSetFetch
   batch = batchSize
   println("Initializing iterator. BatchSize: " + batch + " Number of examples: " + numExamples)
 }
+
+/* TODO: Delete if the masking thing is what I want
+class MoveOrHoldLossFunction() extends LossBinaryXENT {
+
+  private def myScoreArray(labels: INDArray, preOutput: INDArray, activationFn: INDArray, mask: INDArray) : INDArray = {
+    //TODO
+    if (labels.size(1) != preOutput.size(1)) {
+      throw new IllegalArgumentException("Labels array numColumns (size(1) = " + labels.size(1) + ") does not match output layer "
+                                         + "number of outputs (nOut = " + preOutput.size(1) + ") ")
+    }
+
+    var scoreArr: INDArray = null
+    if (activationFn.isInstanceOf[ActivationSoftmax]) {
+      val logsoftmax = Nd4j.getExecutioner().execAndReturn(new LogSoftMax(preOutput.dup()))
+      scoreArr = logsoftmax.muli(labels)
+    } else {
+      kk
+    }
+  }
+
+  override def computeScore(labels: INDArray, preOutput: INDArray, activationFn: IActivation, mask: INDArray, average: Boolean) : Double = {
+    val scoreArr = myScoreArray(labels, preOutput, activationFn, mask)
+    var score = -scoreArr.sumNumber().doubleValue()
+    if (average)
+      score /= scoreArr.size(0)
+    return score
+  }
+
+  override def computeScoreArray(labels: INDArray, preOutput: INDArray, activationFn: IActivation, mask: INDArray) : INDArray = {
+    val scoreArr = myScoreArray(labels, preOutput, activationFn, mask)
+    return scoreArr.sum(1).muli(-1)
+  }
+
+  override def name() : String = {
+    return "MoveOrHoldLossFunction"
+  }
+}
+*/

@@ -8,10 +8,17 @@ import pyboat.models.XorFullyConnected
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.FileSystems
+import org.apache.spark.api.java.JavaSparkContext
+import org.apache.spark.SparkConf
+import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.sql.SparkSession
 import org.deeplearning4j.eval.Evaluation
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
+//import org.deeplearning4j.spark.api.RDDTrainingApproach
+//import org.deeplearning4j.spark.api.TrainingMaster
+//import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer
+//import org.deeplearning4j.spark.parameterserver.training.SharedTrainingMaster
 import org.deeplearning4j.ui.api.UIServer
 import org.deeplearning4j.ui.stats.StatsListener
 import org.deeplearning4j.ui.storage.FileStatsStorage
@@ -45,14 +52,14 @@ object PyBoat {
     ///////////////////////////////////////////////////
     // Manually output a forward pass of the network //
     ///////////////////////////////////////////////////
-    //val manualOutput: INDArray = net.output(dsItr.next().getFeatureMatrix)
-    //dsItr.reset()
-    //println(manualOutput)
+    val manualOutput: INDArray = net.output(dsItr.next().getFeatureMatrix)
+    dsItr.reset()
+    println(manualOutput)
 
-    //val manualEval: Evaluation = new Evaluation(2)
-    //manualEval.eval(dsItr.next().getLabels, manualOutput)
-    //dsItr.reset()
-    //println(manualEval.stats)
+    val manualEval: Evaluation = new Evaluation(2)
+    manualEval.eval(dsItr.next().getLabels, manualOutput)
+    dsItr.reset()
+    println(manualEval.stats)
 
     //// Feed forward
     //val dataNext = dsItr.next()
@@ -82,9 +89,26 @@ object PyBoat {
 
     net.setListeners(new StatsListener(statsStorage))
 
+    ////// SPARK TRAINING ////////////
+    //val sparkConf = new SparkConf().setAppName("DiploTrainer").setMaster("local")
+    //val sc = new JavaSparkContext(conf)
+    //val trainingData: JavaRDD[DataSet] = SparkMachine.getRDDs()//TODO: Make sure that each DataSet has exactly 4 examples in it
+
+    ////Create the TrainingMaster instance
+    //val examplesPerDataSetObject = 4
+    //val trainingMaster = new ParameterAveragingTrainingMaster.Builder(examplesPerDataSetObject).build()
+
+    ////Create the SparkDl4jMultiLayer instance
+    //val sparkNetwork = new SparkDl4jMultiLayer(sc, conf, trainingMaster)
+
+    ////Fit the network using the training data:
+    //sparkNetwork.fit(trainingData)
+    //////////////////////////////////
+
+    ///// TRAINING ////////
     println("Training...")
     var i: Int = 0
-    while (dsItr.hasNext()) {
+    while (dsItr.hasNext() && i < 1000) {
       val ds = dsItr.next()
       net.fit(ds)
       i += 1
@@ -95,10 +119,15 @@ object PyBoat {
           s += j + " "
         println("Shape: " + s)
         println("Value of [0, 0]: " + out.getDouble(0, 0))
+        println("Value of [0, 25]: " + out.getDouble(0, 25))
+        if (i % 100 == 0)
+          println(out.getRow(10))
       }
     }
     dsItr.reset()
+    //////////////////////
 
+    ///// EVALUATION /////
     val output: INDArray = net.output(dsItr.next().getFeatureMatrix)
     dsItr.reset()
     println(output)
@@ -107,6 +136,7 @@ object PyBoat {
     eval.eval(dsItr.next().getLabels, output)
     dsItr.reset()
     println(eval.stats)
+    /////////////////////
   }
 }
 

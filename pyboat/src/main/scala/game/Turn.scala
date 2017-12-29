@@ -60,8 +60,8 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    *            218 -> unit is owned by Russia
    *            255 -> location is owned by Turkey
    * channel 3: 0   -> location is land
-   *            128 -> location is impassible
-   *            255 -> location is sea
+   *            128 -> location is sea
+   *            255 -> location is impassible
    * channel 4: 0   -> location is owned by nobody
    *            36  -> location is owned by Austria
    *            72  -> location is owned by England
@@ -70,7 +70,7 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    *            182 -> location is owned by Italy
    *            218 -> location is owned by Russia
    *            255 -> location is owned by Turkey
-   * channel 5: 0   -> season is Spring
+   * channel 5: 0   -> season is Spring or Winter
    *            255 -> season is Fall
    * channel 6: 0   -> phase is retreat
    *            128 -> phase is build
@@ -84,7 +84,7 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
     val channel2 = board.getUnitOwnershipMask()
     val channel3 = board.getLandTypeMask()
     val channel4 = board.getLandOwnershipMask()
-    val channel5 = if (season == Spring()) Nd4j.zeros(1, 21, 21) else Nd4j.ones(1, 21, 21).mul(255)
+    val channel5 = if (season == Spring() || season == Winter()) Nd4j.zeros(1, 21, 21) else Nd4j.ones(1, 21, 21).mul(255)
     val channel6 = phase match {
       case WinterPhase()  => Nd4j.ones(1, 21, 21).mul(255)
       case OrdersPhase()   => Nd4j.ones(1, 21, 21).mul(255)
