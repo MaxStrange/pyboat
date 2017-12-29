@@ -80,27 +80,29 @@ class Turn(val gameId: Int, val turnNum: Int, val phase: PhaseType, val year: In
    */
   def getHoldOrMoveMatrix() : INDArray = {
     val channel0 = board.getUnitMask()
-    val channel1 = board.getUnitTypeMask()
-    val channel2 = board.getUnitOwnershipMask()
-    val channel3 = board.getLandTypeMask()
-    val channel4 = board.getLandOwnershipMask()
-    val channel5 = if (season == Spring() || season == Winter()) Nd4j.zeros(1, 21, 21) else Nd4j.ones(1, 21, 21).mul(255)
-    val channel6 = phase match {
-      case WinterPhase()  => Nd4j.ones(1, 21, 21).mul(255)
-      case OrdersPhase()   => Nd4j.ones(1, 21, 21).mul(255)
-      case RetreatPhase() => Nd4j.zeros(1, 21, 21)
-      case BuildPhase()   => Nd4j.ones(1, 21, 21).mul(128)
-    }
-    val channel7 = board.getSCMask()
-
-    var matrix = Nd4j.concat(0, channel0, channel1)
-    matrix = Nd4j.concat(0, matrix, channel2)
-    matrix = Nd4j.concat(0, matrix, channel3)
-    matrix = Nd4j.concat(0, matrix, channel4)
-    matrix = Nd4j.concat(0, matrix, channel5)
-    matrix = Nd4j.concat(0, matrix, channel6)
-    matrix = Nd4j.concat(0, matrix, channel7)
-    return matrix
+    //TODO FIXME
+    return channel0
+//    val channel1 = board.getUnitTypeMask()
+//    val channel2 = board.getUnitOwnershipMask()
+//    val channel3 = board.getLandTypeMask()
+//    val channel4 = board.getLandOwnershipMask()
+//    val channel5 = if (season == Spring() || season == Winter()) Nd4j.zeros(1, 21, 21) else Nd4j.ones(1, 21, 21).mul(255)
+//    val channel6 = phase match {
+//      case WinterPhase()  => Nd4j.ones(1, 21, 21).mul(255)
+//      case OrdersPhase()   => Nd4j.ones(1, 21, 21).mul(255)
+//      case RetreatPhase() => Nd4j.zeros(1, 21, 21)
+//      case BuildPhase()   => Nd4j.ones(1, 21, 21).mul(128)
+//    }
+//    val channel7 = board.getSCMask()
+//
+//    var matrix = Nd4j.concat(0, channel0, channel1)
+//    matrix = Nd4j.concat(0, matrix, channel2)
+//    matrix = Nd4j.concat(0, matrix, channel3)
+//    matrix = Nd4j.concat(0, matrix, channel4)
+//    matrix = Nd4j.concat(0, matrix, channel5)
+//    matrix = Nd4j.concat(0, matrix, channel6)
+//    matrix = Nd4j.concat(0, matrix, channel7)
+//    return matrix
   }
 
   /**

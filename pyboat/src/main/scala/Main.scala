@@ -60,24 +60,6 @@ object PyBoat {
     manualEval.eval(dsItr.next().getLabels, manualOutput)
     dsItr.reset()
     println(manualEval.stats)
-
-    //// Feed forward
-    //val dataNext = dsItr.next()
-    //val activations = net.feedForward(dataNext.getFeatureMatrix)
-    //println("ACTIVATIONS: " + activations)
-
-    //// Get the gradients
-    //net.setLabels(dataNext.getLabels)
-    //val grad = net.gradient()
-    //println("GRADIENT: " + grad)
-
-    //val errSignal = net.scoreExamples(dataNext, true)
-    //println("ERR SIGNAL: " + errSignal)
-    ////val err = net.error(errSignal)
-
-    //// Fit and check
-    //net.fit(dataNext)
-    //println("ACTIVATIONS AFTER FITTING: " + net.feedForward(dataNext.getFeatureMatrix))
     ///////////////////////////////////////////////////
 
     println("Initializing UI server...")
@@ -88,22 +70,6 @@ object PyBoat {
     uiServer.attach(statsStorage)
 
     net.setListeners(new StatsListener(statsStorage))
-
-    ////// SPARK TRAINING ////////////
-    //val sparkConf = new SparkConf().setAppName("DiploTrainer").setMaster("local")
-    //val sc = new JavaSparkContext(conf)
-    //val trainingData: JavaRDD[DataSet] = SparkMachine.getRDDs()//TODO: Make sure that each DataSet has exactly 4 examples in it
-
-    ////Create the TrainingMaster instance
-    //val examplesPerDataSetObject = 4
-    //val trainingMaster = new ParameterAveragingTrainingMaster.Builder(examplesPerDataSetObject).build()
-
-    ////Create the SparkDl4jMultiLayer instance
-    //val sparkNetwork = new SparkDl4jMultiLayer(sc, conf, trainingMaster)
-
-    ////Fit the network using the training data:
-    //sparkNetwork.fit(trainingData)
-    //////////////////////////////////
 
     ///// TRAINING ////////
     println("Training...")
@@ -139,16 +105,4 @@ object PyBoat {
     /////////////////////
   }
 }
-
-//object SimpleApp {
-//  def main(args: Array[String]) {
-//    val logFile = "YOUR_SPARK_HOME/README.md" // Should be some file on your system
-//    val spark = SparkSession.builder.appName("Simple Application").getOrCreate()
-//    val logData = spark.read.textFile(logFile).cache()
-//    val numAs = logData.filter(line => line.contains("a")).count()
-//    val numBs = logData.filter(line => line.contains("b")).count()
-//    println(s"Lines with a: $numAs, Lines with b: $numBs")
-//    spark.stop()
-//  }
-//}
 

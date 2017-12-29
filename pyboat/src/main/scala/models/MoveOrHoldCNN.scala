@@ -42,7 +42,6 @@ case class MoveOrHoldCNN() extends ModelArch {
     val builder = new NeuralNetConfiguration.Builder
     builder.seed(123)
     builder.iterations(1)
-    //builder.regularization(true).l2(0.0005)
     builder.learningRate(0.05)
     builder.weightInit(WeightInit.XAVIER)
     builder.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
@@ -53,7 +52,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     val cnnBuilder0 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder0.nIn(fetcher.nChannels)
     cnnBuilder0.stride(1, 1)
-    cnnBuilder0.nOut(20) //number of filters in this layer
+    cnnBuilder0.nOut(50) //number of filters in this layer
     cnnBuilder0.activation(Activation.SIGMOID)
     listBuilder.layer(0, cnnBuilder0.build)
 
@@ -183,41 +182,3 @@ class CNNDatasetIterator(batchSize: Int, numExamples: Int, fetcher: DataSetFetch
   batch = batchSize
   println("Initializing iterator. BatchSize: " + batch + " Number of examples: " + numExamples)
 }
-
-/* TODO: Delete if the masking thing is what I want
-class MoveOrHoldLossFunction() extends LossBinaryXENT {
-
-  private def myScoreArray(labels: INDArray, preOutput: INDArray, activationFn: INDArray, mask: INDArray) : INDArray = {
-    //TODO
-    if (labels.size(1) != preOutput.size(1)) {
-      throw new IllegalArgumentException("Labels array numColumns (size(1) = " + labels.size(1) + ") does not match output layer "
-                                         + "number of outputs (nOut = " + preOutput.size(1) + ") ")
-    }
-
-    var scoreArr: INDArray = null
-    if (activationFn.isInstanceOf[ActivationSoftmax]) {
-      val logsoftmax = Nd4j.getExecutioner().execAndReturn(new LogSoftMax(preOutput.dup()))
-      scoreArr = logsoftmax.muli(labels)
-    } else {
-      kk
-    }
-  }
-
-  override def computeScore(labels: INDArray, preOutput: INDArray, activationFn: IActivation, mask: INDArray, average: Boolean) : Double = {
-    val scoreArr = myScoreArray(labels, preOutput, activationFn, mask)
-    var score = -scoreArr.sumNumber().doubleValue()
-    if (average)
-      score /= scoreArr.size(0)
-    return score
-  }
-
-  override def computeScoreArray(labels: INDArray, preOutput: INDArray, activationFn: IActivation, mask: INDArray) : INDArray = {
-    val scoreArr = myScoreArray(labels, preOutput, activationFn, mask)
-    return scoreArr.sum(1).muli(-1)
-  }
-
-  override def name() : String = {
-    return "MoveOrHoldLossFunction"
-  }
-}
-*/
