@@ -42,50 +42,65 @@ case class MoveOrHoldCNN() extends ModelArch {
     val builder = new NeuralNetConfiguration.Builder
     builder.seed(123)
     builder.iterations(1)
-    builder.learningRate(0.05)
+    builder.learningRate(0.01)
     builder.weightInit(WeightInit.XAVIER)
     builder.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
     builder.updater(Updater.NESTEROVS).momentum(0.9)
 
     val listBuilder = builder.list
+    var lindex = 0
 
     val cnnBuilder0 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder0.nIn(fetcher.nChannels)
     cnnBuilder0.stride(1, 1)
-    cnnBuilder0.nOut(50) //number of filters in this layer
+    cnnBuilder0.nOut(20) //number of filters in this layer
     cnnBuilder0.activation(Activation.SIGMOID)
-    listBuilder.layer(0, cnnBuilder0.build)
+    listBuilder.layer(lindex, cnnBuilder0.build)
+    lindex += 1
 
-    val subsamp0 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
-    subsamp0.kernelSize(2, 2)
-    subsamp0.stride(2, 2)
-    listBuilder.layer(1, subsamp0.build)
+    val cnnBuilder0_5 = new ConvolutionLayer.Builder(5, 5)
+    cnnBuilder0_5.stride(1, 1)
+    cnnBuilder0_5.nOut(30)
+    cnnBuilder0_5.activation(Activation.SIGMOID)
+    listBuilder.layer(lindex, cnnBuilder0_5.build)
+    lindex += 1
+
+//    val subsamp0 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+//    subsamp0.kernelSize(2, 2)
+//    subsamp0.stride(1, 1)
+//    listBuilder.layer(lindex, subsamp0.build)
+//    lindex += 1
 
     val cnnBuilder1 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder1.stride(1, 1)
     cnnBuilder1.nOut(50)
     cnnBuilder1.activation(Activation.SIGMOID)
-    listBuilder.layer(2, cnnBuilder1.build)
+    listBuilder.layer(lindex, cnnBuilder1.build)
+    lindex += 1
 
     val subsamp1 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
     subsamp1.kernelSize(2, 2)
-    subsamp1.stride(2, 2)
-    listBuilder.layer(3, subsamp1.build)
+    subsamp1.stride(1, 1)
+    listBuilder.layer(lindex, subsamp1.build)
+    lindex += 1
 
     val dense = new DenseLayer.Builder
-    dense.activation(Activation.SIGMOID)
+    dense.activation(Activation.LEAKYRELU)
     dense.nOut(1024)
-    listBuilder.layer(4, dense.build)
+    listBuilder.layer(lindex, dense.build)
+    lindex += 1
 
     val dense1 = new DenseLayer.Builder
-    dense1.activation(Activation.SIGMOID)
+    dense1.activation(Activation.LEAKYRELU)
     dense1.nOut(512)
-    listBuilder.layer(5, dense1.build)
+    listBuilder.layer(lindex, dense1.build)
+    lindex += 1
 
     val output = new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
     output.nOut(21 * 21)
     output.activation(Activation.SIGMOID)
-    listBuilder.layer(6, output.build)
+    listBuilder.layer(lindex, output.build)
+    lindex += 1
 
     listBuilder.setInputType(InputType.convolutionalFlat(21, 21, fetcher.nChannels))
     listBuilder.backprop(true)

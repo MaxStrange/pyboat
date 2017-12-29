@@ -15,10 +15,6 @@ import org.apache.spark.sql.SparkSession
 import org.deeplearning4j.eval.Evaluation
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-//import org.deeplearning4j.spark.api.RDDTrainingApproach
-//import org.deeplearning4j.spark.api.TrainingMaster
-//import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer
-//import org.deeplearning4j.spark.parameterserver.training.SharedTrainingMaster
 import org.deeplearning4j.ui.api.UIServer
 import org.deeplearning4j.ui.stats.StatsListener
 import org.deeplearning4j.ui.storage.FileStatsStorage
@@ -74,7 +70,7 @@ object PyBoat {
     ///// TRAINING ////////
     println("Training...")
     var i: Int = 0
-    while (dsItr.hasNext() && i < 1000) {
+    while (dsItr.hasNext() && i < 100000) {
       val ds = dsItr.next()
       net.fit(ds)
       i += 1
