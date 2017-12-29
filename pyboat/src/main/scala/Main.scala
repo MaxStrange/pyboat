@@ -15,10 +15,6 @@ import org.apache.spark.sql.SparkSession
 import org.deeplearning4j.eval.Evaluation
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-//import org.deeplearning4j.spark.api.RDDTrainingApproach
-//import org.deeplearning4j.spark.api.TrainingMaster
-//import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer
-//import org.deeplearning4j.spark.parameterserver.training.SharedTrainingMaster
 import org.deeplearning4j.ui.api.UIServer
 import org.deeplearning4j.ui.stats.StatsListener
 import org.deeplearning4j.ui.storage.FileStatsStorage
@@ -30,7 +26,7 @@ object PyBoat {
     util.Random.setSeed(12345)
 
     // !! Change this value to change what model is being trained !! //
-    val architecture: ModelArch = MoveOrHoldCNN()
+    val architecture: ModelArch = MoveOrHoldMLP()
     println("ARCHITECTURE: " + architecture)
 
     val networkConf: MultiLayerConfiguration = architecture match {
