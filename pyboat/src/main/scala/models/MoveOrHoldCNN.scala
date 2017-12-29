@@ -58,6 +58,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, cnnBuilder0.build)
     lindex += 1
 
+<<<<<<< HEAD
     val cnnBuilder0_5 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder0_5.stride(1, 1)
     cnnBuilder0_5.nOut(30)
@@ -181,10 +182,7 @@ class CNNDataFetcher() extends BaseDataFetcher {
    * is done, this will set it to null.
    */
   def fetchNextGame() = {
-    //TODO: FIXME: DEBUG ////
-    val ls = shuffledGameIds.dropWhile(i => i != curGame.id) //always just return the same game
-    /////////////////////////
-    //val ls = shuffledGameIds.dropWhile(i => i != curGame.id).drop(1)
+    val ls = shuffledGameIds.dropWhile(i => i != curGame.id).drop(1)
     if (ls.length == 0)
       curGame = null
     else

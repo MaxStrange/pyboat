@@ -36,39 +36,50 @@ case class MoveOrHoldMLP() extends ModelArch {
     val builder = new NeuralNetConfiguration.Builder
     builder.seed(123)
     builder.iterations(1)
-    //builder.regularization(true).l2(0.0005)
     builder.learningRate(0.01)
     builder.weightInit(WeightInit.XAVIER)
     builder.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
     builder.updater(Updater.NESTEROVS).momentum(0.9)
 
     val listBuilder = builder.list
+    var lindex = 0
 
     val dense0 = new DenseLayer.Builder
     dense0.activation(Activation.SIGMOID)
     dense0.nIn(21 * 21 * fetcher.nChannels)
     dense0.nOut(4096)
-    listBuilder.layer(0, dense0.build)
+    listBuilder.layer(lindex, dense0.build)
+    lindex += 1
+
+    val dense0_5 = new DenseLayer.Builder
+    dense0_5.activation(Activation.SIGMOID)
+    dense0_5.nOut(2048)
+    listBuilder.layer(lindex, dense0_5.build)
+    lindex += 1
 
     val dense1 = new DenseLayer.Builder
     dense1.activation(Activation.SIGMOID)
     dense1.nOut(2048)
-    listBuilder.layer(1, dense1.build)
+    listBuilder.layer(lindex, dense1.build)
+    lindex += 1
 
     val dense2 = new DenseLayer.Builder
     dense2.activation(Activation.SIGMOID)
     dense2.nOut(1024)
-    listBuilder.layer(2, dense2.build)
+    listBuilder.layer(lindex, dense2.build)
+    lindex += 1
 
     val dense3 = new DenseLayer.Builder
-    dense3.activation(Activation.SIGMOID)
+    dense3.activation(Activation.LEAKYRELU)
     dense3.nOut(512)
-    listBuilder.layer(3, dense3.build)
+    listBuilder.layer(lindex, dense3.build)
+    lindex += 1
 
     val output = new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
     output.nOut(21 * 21)
     output.activation(Activation.SIGMOID)
-    listBuilder.layer(4, output.build)
+    listBuilder.layer(lindex, output.build)
+    lindex += 1
 
     listBuilder.backprop(true)
     listBuilder.pretrain(false)
