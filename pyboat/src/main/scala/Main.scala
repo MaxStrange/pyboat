@@ -26,7 +26,7 @@ object PyBoat {
     util.Random.setSeed(12345)
 
     // !! Change this value to change what model is being trained !! //
-    val architecture: ModelArch = MoveOrHoldMLP()
+    val architecture: ModelArch = MoveOrHoldCNN()
     println("ARCHITECTURE: " + architecture)
 
     val networkConf: MultiLayerConfiguration = architecture match {

@@ -6,6 +6,7 @@ import pyboat.game.Game
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
+import org.deeplearning4j.nn.conf.ConvolutionMode
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.Updater
@@ -50,50 +51,123 @@ case class MoveOrHoldCNN() extends ModelArch {
     val listBuilder = builder.list
     var lindex = 0
 
-    val cnnBuilder0 = new ConvolutionLayer.Builder(5, 5)
+    val cnnBuilder0 = new ConvolutionLayer.Builder(3, 3)
     cnnBuilder0.nIn(fetcher.nChannels)
     cnnBuilder0.stride(1, 1)
-    cnnBuilder0.nOut(20) //number of filters in this layer
+    cnnBuilder0.padding(1, 1)
+    cnnBuilder0.convolutionMode(ConvolutionMode.Same)
+    cnnBuilder0.nOut(64) //number of filters in this layer
     cnnBuilder0.activation(Activation.SIGMOID)
     listBuilder.layer(lindex, cnnBuilder0.build)
     lindex += 1
 
-<<<<<<< HEAD
-    val cnnBuilder0_5 = new ConvolutionLayer.Builder(5, 5)
+    val subsamp0 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+    subsamp0.kernelSize(2, 2)
+    subsamp0.stride(2, 2)
+    subsamp0.convolutionMode(ConvolutionMode.Same)
+    listBuilder.layer(lindex, subsamp0.build)
+    lindex += 1
+
+    val cnnBuilder0_5 = new ConvolutionLayer.Builder(3, 3)
     cnnBuilder0_5.stride(1, 1)
-    cnnBuilder0_5.nOut(30)
+    cnnBuilder0_5.padding(1, 1)
+    cnnBuilder0_5.convolutionMode(ConvolutionMode.Same)
+    cnnBuilder0_5.nOut(128)
     cnnBuilder0_5.activation(Activation.SIGMOID)
     listBuilder.layer(lindex, cnnBuilder0_5.build)
     lindex += 1
 
-//    val subsamp0 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
-//    subsamp0.kernelSize(2, 2)
-//    subsamp0.stride(1, 1)
-//    listBuilder.layer(lindex, subsamp0.build)
-//    lindex += 1
+    val subsamp0_5 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+    subsamp0_5.kernelSize(2, 2)
+    subsamp0_5.stride(2, 2)
+    subsamp0_5.convolutionMode(ConvolutionMode.Same)
+    listBuilder.layer(lindex, subsamp0_5.build)
+    lindex += 1
 
-    val cnnBuilder1 = new ConvolutionLayer.Builder(5, 5)
+    val cnnBuilder1 = new ConvolutionLayer.Builder(3, 3)
     cnnBuilder1.stride(1, 1)
-    cnnBuilder1.nOut(50)
+    cnnBuilder1.padding(1, 1)
+    cnnBuilder1.convolutionMode(ConvolutionMode.Same)
+    cnnBuilder1.nOut(256)
     cnnBuilder1.activation(Activation.SIGMOID)
     listBuilder.layer(lindex, cnnBuilder1.build)
     lindex += 1
 
+    val cnnBuilder1_5 = new ConvolutionLayer.Builder(3, 3)
+    cnnBuilder1_5.stride(1, 1)
+    cnnBuilder1_5.padding(1, 1)
+    cnnBuilder1_5.convolutionMode(ConvolutionMode.Same)
+    cnnBuilder1_5.nOut(256)
+    cnnBuilder1_5.activation(Activation.SIGMOID)
+    listBuilder.layer(lindex, cnnBuilder1_5.build)
+    lindex += 1
+
     val subsamp1 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
     subsamp1.kernelSize(2, 2)
-    subsamp1.stride(1, 1)
+    subsamp1.stride(2, 2)
+    subsamp1.convolutionMode(ConvolutionMode.Same)
     listBuilder.layer(lindex, subsamp1.build)
+    lindex += 1
+
+    val cnnBuilder2 = new ConvolutionLayer.Builder(3, 3)
+    cnnBuilder2.stride(1, 1)
+    cnnBuilder2.padding(1, 1)
+    cnnBuilder2.convolutionMode(ConvolutionMode.Same)
+    cnnBuilder2.nOut(512)
+    cnnBuilder2.activation(Activation.SIGMOID)
+    listBuilder.layer(lindex, cnnBuilder2.build)
+    lindex += 1
+
+    val cnnBuilder3 = new ConvolutionLayer.Builder(3, 3)
+    cnnBuilder3.stride(1, 1)
+    cnnBuilder3.padding(1, 1)
+    cnnBuilder3.convolutionMode(ConvolutionMode.Same)
+    cnnBuilder3.nOut(512)
+    cnnBuilder3.activation(Activation.SIGMOID)
+    listBuilder.layer(lindex, cnnBuilder3.build)
+    lindex += 1
+
+    val subsamp2 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+    subsamp2.kernelSize(2, 2)
+    subsamp2.stride(2, 2)
+    subsamp2.convolutionMode(ConvolutionMode.Same)
+    listBuilder.layer(lindex, subsamp2.build)
+    lindex += 1
+
+    val cnnBuilder4 = new ConvolutionLayer.Builder(3, 3)
+    cnnBuilder4.stride(1, 1)
+    cnnBuilder4.padding(1, 1)
+    cnnBuilder4.convolutionMode(ConvolutionMode.Same)
+    cnnBuilder4.nOut(512)
+    cnnBuilder4.activation(Activation.SIGMOID)
+    listBuilder.layer(lindex, cnnBuilder4.build)
+    lindex += 1
+
+    val cnnBuilder5 = new ConvolutionLayer.Builder(3, 3)
+    cnnBuilder5.stride(1, 1)
+    cnnBuilder5.padding(1, 1)
+    cnnBuilder5.convolutionMode(ConvolutionMode.Same)
+    cnnBuilder5.nOut(512)
+    cnnBuilder5.activation(Activation.SIGMOID)
+    listBuilder.layer(lindex, cnnBuilder5.build)
+    lindex += 1
+
+    val subsamp3 = new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+    subsamp3.kernelSize(2, 2)
+    subsamp3.stride(2, 2)
+    subsamp3.convolutionMode(ConvolutionMode.Same)
+    listBuilder.layer(lindex, subsamp3.build)
     lindex += 1
 
     val dense = new DenseLayer.Builder
     dense.activation(Activation.LEAKYRELU)
-    dense.nOut(1024)
+    dense.nOut(4096)
     listBuilder.layer(lindex, dense.build)
     lindex += 1
 
     val dense1 = new DenseLayer.Builder
     dense1.activation(Activation.LEAKYRELU)
-    dense1.nOut(512)
+    dense1.nOut(4096)
     listBuilder.layer(lindex, dense1.build)
     lindex += 1
 
