@@ -21,12 +21,14 @@ class Node:
         self.num_times_children_seen = {} # dict from child to num_times generated
         self.softmaxes = [(unit.id, softmax(unit, state) for unit in state.units()]
         # This would leave you with:
-        # [(A0, (0.8, 0.2)), (A1, (0.87, 0.13)), ...]
+        # [(A0, (0.8, 0.2)), (A1, (0.87, 0.13)), ...] <-- Currently these numbers are much closer to a 50/50 split
         # Which describes the softmax function's belief in each unit's odds of
         # (participating in a move order, participating in a hold order)
         # This softmax function would be a neural network that has been trained
         # to predict a single unit's moves from a game board, trained on actual
         # players' choices (supervised learning)
+        # Currently, I am testing out a CNN architecture, but it doesn't quite yet work
+        # We are hoping for just slightly better than chance (as that is probably the best you can do)
 
     def __str__(self):
         s = "Node: "

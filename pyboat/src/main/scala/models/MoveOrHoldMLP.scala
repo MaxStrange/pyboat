@@ -6,6 +6,7 @@ import pyboat.game.Game
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
+import org.deeplearning4j.nn.conf.GradientNormalization
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.Updater
@@ -40,43 +41,56 @@ case class MoveOrHoldMLP() extends ModelArch {
     builder.weightInit(WeightInit.XAVIER)
     builder.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
     builder.updater(Updater.NESTEROVS).momentum(0.9)
+    builder.gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
 
     val listBuilder = builder.list
     var lindex = 0
 
     val dense0 = new DenseLayer.Builder
-    dense0.activation(Activation.SIGMOID)
+    dense0.activation(Activation.LEAKYRELU)
     dense0.nIn(21 * 21 * fetcher.nChannels)
     dense0.nOut(4096)
+    dense0.biasInit(0.01)
+    dense0.biasLearningRate(0.02)
     listBuilder.layer(lindex, dense0.build)
     lindex += 1
 
     val dense0_5 = new DenseLayer.Builder
-    dense0_5.activation(Activation.SIGMOID)
+    dense0_5.activation(Activation.LEAKYRELU)
     dense0_5.nOut(2048)
+    dense0_5.biasInit(0.01)
+    dense0_5.biasLearningRate(0.02)
     listBuilder.layer(lindex, dense0_5.build)
     lindex += 1
 
     val dense1 = new DenseLayer.Builder
-    dense1.activation(Activation.SIGMOID)
+    dense1.activation(Activation.LEAKYRELU)
     dense1.nOut(2048)
+    dense1.biasInit(0.01)
+    dense1.biasLearningRate(0.02)
     listBuilder.layer(lindex, dense1.build)
     lindex += 1
 
     val dense2 = new DenseLayer.Builder
-    dense2.activation(Activation.SIGMOID)
+    dense2.activation(Activation.LEAKYRELU)
     dense2.nOut(1024)
+    dense2.biasInit(0.01)
+    dense2.biasLearningRate(0.02)
     listBuilder.layer(lindex, dense2.build)
     lindex += 1
 
     val dense3 = new DenseLayer.Builder
     dense3.activation(Activation.LEAKYRELU)
     dense3.nOut(512)
+    dense3.biasInit(0.01)
+    dense3.biasLearningRate(0.02)
     listBuilder.layer(lindex, dense3.build)
     lindex += 1
 
     val output = new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
     output.nOut(21 * 21)
+    output.biasInit(0.01)
+    output.biasLearningRate(0.02)
     output.activation(Activation.SIGMOID)
     listBuilder.layer(lindex, output.build)
     lindex += 1

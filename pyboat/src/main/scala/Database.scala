@@ -8,11 +8,24 @@ import java.sql.Connection
 import scala.io.Source
 import java.io.IOException
 
-object Database {
-  val driver = "com.mysql.jdbc.Driver"
+abstract class DriverConfig
+case class LocalHost() extends DriverConfig {
+  val url = "jdbc:mysql://localhost/diplomacy?autoReconnect=true&useSSL=false"
+  val username = "root"
+  val password = ""
+}
+case class Synapse() extends DriverConfig {
   val url = "jdbc:mysql://10.75.6.229/diplomacy?autoReconnect=true&useSSL=false"
   val username = "maxst"
-  val password = readPasswordFromFile()
+  val password = Database.readPasswordFromFile()
+}
+
+object Database {
+  val driver = "com.mysql.jdbc.Driver"
+  val driverConfig = LocalHost()
+  val url = driverConfig.url
+  val username = driverConfig.username
+  val password = driverConfig.password
 
   def getTotalNumExamplesMoveOrHold() : Int = {
     // The number of labels of this type in a game = (n - 1),
