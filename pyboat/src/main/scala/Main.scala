@@ -18,6 +18,7 @@ import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
 import org.deeplearning4j.ui.api.UIServer
 import org.deeplearning4j.ui.stats.StatsListener
 import org.deeplearning4j.ui.storage.FileStatsStorage
+import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.dataset.api.iterator.BaseDatasetIterator
 
@@ -26,7 +27,7 @@ object PyBoat {
     util.Random.setSeed(12345)
 
     // !! Change this value to change what model is being trained !! //
-    val architecture: ModelArch = MoveOrHoldCNN()
+    val architecture: ModelArch = MoveOrHoldMLP()
     println("ARCHITECTURE: " + architecture)
 
     val networkConf: MultiLayerConfiguration = architecture match {
@@ -41,6 +42,12 @@ object PyBoat {
       case MoveOrHoldMLP() => MoveOrHoldMLP().getDatasetIterator()
     }
 
+    val modelTypeName: String = architecture match {
+      case XorFullyConnected() => "XORFullyConnected"
+      case MoveOrHoldCNN() => "MoveOrHoldCNN"
+      case MoveOrHoldMLP() => "MoveOrHoldMLP"
+    }
+
     println("Building network...")
     val net = new MultiLayerNetwork(networkConf)
     net.init()
@@ -51,11 +58,6 @@ object PyBoat {
     val manualOutput: INDArray = net.output(dsItr.next().getFeatureMatrix)
     dsItr.reset()
     println(manualOutput)
-
-    val manualEval: Evaluation = new Evaluation(2)
-    manualEval.eval(dsItr.next().getLabels, manualOutput)
-    dsItr.reset()
-    println(manualEval.stats)
     ///////////////////////////////////////////////////
 
     println("Initializing UI server...")
@@ -70,8 +72,9 @@ object PyBoat {
     ///// TRAINING ////////
     println("Training...")
     var i: Int = 0
-    while (dsItr.hasNext() && i < 100000) {
+    while (dsItr.hasNext()) {
       val ds = dsItr.next()
+      println("Fitting network to next batch...")
       net.fit(ds)
       i += 1
       if (i % 10 == 0) {
@@ -82,9 +85,23 @@ object PyBoat {
         println("Shape: " + s)
         println("Value of [0, 0]: " + out.getDouble(0, 0))
         println("Value of [0, 25]: " + out.getDouble(0, 25))
-        if (i % 100 == 0)
+        if (i % 100 == 0) {
+          println("=================== Mask  ===================")
+          println(ds.getLabelsMaskArray().getRow(10))
+          println("=================== Label ===================")
+          println(ds.getLabels().getRow(10))
+          println("=================== Output ===================")
           println(out.getRow(10))
+        }
+        if (i % 1000 == 0) {
+          println("Saving model...")
+          Files.deleteIfExists(FileSystems.getDefault().getPath(modelTypeName + ".zip"))
+          val locationToSave = new File(modelTypeName + ".zip")
+          val saveUpdater = true
+          ModelSerializer.writeModel(net, locationToSave, saveUpdater);
+        }
       }
+      println("Readying next batch...")
     }
     dsItr.reset()
     //////////////////////
@@ -93,11 +110,6 @@ object PyBoat {
     val output: INDArray = net.output(dsItr.next().getFeatureMatrix)
     dsItr.reset()
     println(output)
-
-    val eval: Evaluation = new Evaluation(2)
-    eval.eval(dsItr.next().getLabels, output)
-    dsItr.reset()
-    println(eval.stats)
     /////////////////////
   }
 }

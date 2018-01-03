@@ -6,7 +6,9 @@ import pyboat.game.Game
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
+import org.deeplearning4j.nn.conf.CNNLossLayer
 import org.deeplearning4j.nn.conf.ConvolutionMode
+import org.deeplearning4j.nn.conf.GradientNormalization
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.Updater
@@ -43,21 +45,24 @@ case class MoveOrHoldCNN() extends ModelArch {
     val builder = new NeuralNetConfiguration.Builder
     builder.seed(123)
     builder.iterations(1)
-    builder.learningRate(0.01)
+    builder.learningRate(0.02)
     builder.weightInit(WeightInit.XAVIER)
     builder.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-    builder.updater(Updater.NESTEROVS).momentum(0.9)
+    builder.updater(Updater.ADAM)
+    builder.gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
 
     val listBuilder = builder.list
     var lindex = 0
 
-    val cnnBuilder0 = new ConvolutionLayer.Builder(3, 3)
+    val cnnBuilder0 = new ConvolutionLayer.Builder(7, 7)
     cnnBuilder0.nIn(fetcher.nChannels)
     cnnBuilder0.stride(1, 1)
     cnnBuilder0.padding(1, 1)
+    cnnBuilder0.biasInit(0.01)
+    cnnBuilder0.biasLearningRate(0.02)
     cnnBuilder0.convolutionMode(ConvolutionMode.Same)
-    cnnBuilder0.nOut(64) //number of filters in this layer
-    cnnBuilder0.activation(Activation.SIGMOID)
+    cnnBuilder0.nOut(256) //number of filters in this layer
+    cnnBuilder0.activation(Activation.LEAKYRELU)
     listBuilder.layer(lindex, cnnBuilder0.build)
     lindex += 1
 
@@ -68,12 +73,14 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, subsamp0.build)
     lindex += 1
 
-    val cnnBuilder0_5 = new ConvolutionLayer.Builder(3, 3)
+    val cnnBuilder0_5 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder0_5.stride(1, 1)
     cnnBuilder0_5.padding(1, 1)
+    cnnBuilder0_5.biasInit(0.01)
+    cnnBuilder0_5.biasLearningRate(0.02)
     cnnBuilder0_5.convolutionMode(ConvolutionMode.Same)
     cnnBuilder0_5.nOut(128)
-    cnnBuilder0_5.activation(Activation.SIGMOID)
+    cnnBuilder0_5.activation(Activation.LEAKYRELU)
     listBuilder.layer(lindex, cnnBuilder0_5.build)
     lindex += 1
 
@@ -87,18 +94,22 @@ case class MoveOrHoldCNN() extends ModelArch {
     val cnnBuilder1 = new ConvolutionLayer.Builder(3, 3)
     cnnBuilder1.stride(1, 1)
     cnnBuilder1.padding(1, 1)
+    cnnBuilder1.biasInit(0.01)
+    cnnBuilder1.biasLearningRate(0.02)
     cnnBuilder1.convolutionMode(ConvolutionMode.Same)
     cnnBuilder1.nOut(256)
-    cnnBuilder1.activation(Activation.SIGMOID)
+    cnnBuilder1.activation(Activation.LEAKYRELU)
     listBuilder.layer(lindex, cnnBuilder1.build)
     lindex += 1
 
     val cnnBuilder1_5 = new ConvolutionLayer.Builder(3, 3)
     cnnBuilder1_5.stride(1, 1)
     cnnBuilder1_5.padding(1, 1)
+    cnnBuilder1_5.biasInit(0.01)
+    cnnBuilder1_5.biasLearningRate(0.02)
     cnnBuilder1_5.convolutionMode(ConvolutionMode.Same)
     cnnBuilder1_5.nOut(256)
-    cnnBuilder1_5.activation(Activation.SIGMOID)
+    cnnBuilder1_5.activation(Activation.LEAKYRELU)
     listBuilder.layer(lindex, cnnBuilder1_5.build)
     lindex += 1
 
@@ -112,18 +123,22 @@ case class MoveOrHoldCNN() extends ModelArch {
     val cnnBuilder2 = new ConvolutionLayer.Builder(3, 3)
     cnnBuilder2.stride(1, 1)
     cnnBuilder2.padding(1, 1)
+    cnnBuilder2.biasInit(0.01)
+    cnnBuilder2.biasLearningRate(0.02)
     cnnBuilder2.convolutionMode(ConvolutionMode.Same)
     cnnBuilder2.nOut(512)
-    cnnBuilder2.activation(Activation.SIGMOID)
+    cnnBuilder2.activation(Activation.LEAKYRELU)
     listBuilder.layer(lindex, cnnBuilder2.build)
     lindex += 1
 
     val cnnBuilder3 = new ConvolutionLayer.Builder(3, 3)
     cnnBuilder3.stride(1, 1)
     cnnBuilder3.padding(1, 1)
+    cnnBuilder3.biasInit(0.01)
+    cnnBuilder3.biasLearningRate(0.02)
     cnnBuilder3.convolutionMode(ConvolutionMode.Same)
     cnnBuilder3.nOut(512)
-    cnnBuilder3.activation(Activation.SIGMOID)
+    cnnBuilder3.activation(Activation.LEAKYRELU)
     listBuilder.layer(lindex, cnnBuilder3.build)
     lindex += 1
 
@@ -137,18 +152,22 @@ case class MoveOrHoldCNN() extends ModelArch {
     val cnnBuilder4 = new ConvolutionLayer.Builder(3, 3)
     cnnBuilder4.stride(1, 1)
     cnnBuilder4.padding(1, 1)
+    cnnBuilder4.biasInit(0.01)
+    cnnBuilder4.biasLearningRate(0.02)
     cnnBuilder4.convolutionMode(ConvolutionMode.Same)
     cnnBuilder4.nOut(512)
-    cnnBuilder4.activation(Activation.SIGMOID)
+    cnnBuilder4.activation(Activation.LEAKYRELU)
     listBuilder.layer(lindex, cnnBuilder4.build)
     lindex += 1
 
     val cnnBuilder5 = new ConvolutionLayer.Builder(3, 3)
     cnnBuilder5.stride(1, 1)
     cnnBuilder5.padding(1, 1)
+    cnnBuilder5.biasInit(0.01)
+    cnnBuilder5.biasLearningRate(0.02)
     cnnBuilder5.convolutionMode(ConvolutionMode.Same)
     cnnBuilder5.nOut(512)
-    cnnBuilder5.activation(Activation.SIGMOID)
+    cnnBuilder5.activation(Activation.LEAKYRELU)
     listBuilder.layer(lindex, cnnBuilder5.build)
     lindex += 1
 
@@ -161,12 +180,16 @@ case class MoveOrHoldCNN() extends ModelArch {
 
     val dense = new DenseLayer.Builder
     dense.activation(Activation.LEAKYRELU)
+    dense.biasInit(0.01)
+    dense.biasLearningRate(0.02)
     dense.nOut(4096)
     listBuilder.layer(lindex, dense.build)
     lindex += 1
 
     val dense1 = new DenseLayer.Builder
     dense1.activation(Activation.LEAKYRELU)
+    dense1.biasInit(0.01)
+    dense1.biasLearningRate(0.02)
     dense1.nOut(4096)
     listBuilder.layer(lindex, dense1.build)
     lindex += 1
@@ -174,6 +197,8 @@ case class MoveOrHoldCNN() extends ModelArch {
     val output = new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
     output.nOut(21 * 21)
     output.activation(Activation.SIGMOID)
+    output.biasInit(0.01)
+    output.biasLearningRate(0.02)
     listBuilder.layer(lindex, output.build)
     lindex += 1
 
