@@ -7,6 +7,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
 import org.deeplearning4j.nn.conf.ConvolutionMode
+import org.deeplearning4j.nn.conf.GradientNormalization
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.Updater
@@ -36,7 +37,7 @@ import org.nd4j.linalg.primitives.Pair
 
 case class MoveOrHoldCNN() extends ModelArch {
   Nd4j.ENFORCE_NUMERICAL_STABILITY = true
-  val batchSize = 16
+  val batchSize = 8
   val fetcher = new CNNDataFetcher()
 
   def getConfiguration() : MultiLayerConfiguration = {
@@ -47,6 +48,10 @@ case class MoveOrHoldCNN() extends ModelArch {
     builder.weightInit(WeightInit.XAVIER)
     builder.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
     builder.updater(Updater.NESTEROVS).momentum(0.9)
+    builder.gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
+    builder.l1(1e-4)
+    builder.regularization(true)
+    builder.l2(5 * 1e-4)
 
     val listBuilder = builder.list
     var lindex = 0
@@ -57,7 +62,8 @@ case class MoveOrHoldCNN() extends ModelArch {
     cnnBuilder0.padding(1, 1)
     cnnBuilder0.convolutionMode(ConvolutionMode.Same)
     cnnBuilder0.nOut(64) //number of filters in this layer
-    cnnBuilder0.activation(Activation.SIGMOID)
+    cnnBuilder0.activation(Activation.RELU)
+    cnnBuilder0.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, cnnBuilder0.build)
     lindex += 1
 
@@ -73,7 +79,8 @@ case class MoveOrHoldCNN() extends ModelArch {
     cnnBuilder0_5.padding(1, 1)
     cnnBuilder0_5.convolutionMode(ConvolutionMode.Same)
     cnnBuilder0_5.nOut(128)
-    cnnBuilder0_5.activation(Activation.SIGMOID)
+    cnnBuilder0_5.activation(Activation.RELU)
+    cnnBuilder0_5.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, cnnBuilder0_5.build)
     lindex += 1
 
@@ -89,7 +96,8 @@ case class MoveOrHoldCNN() extends ModelArch {
     cnnBuilder1.padding(1, 1)
     cnnBuilder1.convolutionMode(ConvolutionMode.Same)
     cnnBuilder1.nOut(256)
-    cnnBuilder1.activation(Activation.SIGMOID)
+    cnnBuilder1.activation(Activation.RELU)
+    cnnBuilder1.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, cnnBuilder1.build)
     lindex += 1
 
@@ -98,7 +106,8 @@ case class MoveOrHoldCNN() extends ModelArch {
     cnnBuilder1_5.padding(1, 1)
     cnnBuilder1_5.convolutionMode(ConvolutionMode.Same)
     cnnBuilder1_5.nOut(256)
-    cnnBuilder1_5.activation(Activation.SIGMOID)
+    cnnBuilder1_5.activation(Activation.RELU)
+    cnnBuilder1_5.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, cnnBuilder1_5.build)
     lindex += 1
 
@@ -114,7 +123,8 @@ case class MoveOrHoldCNN() extends ModelArch {
     cnnBuilder2.padding(1, 1)
     cnnBuilder2.convolutionMode(ConvolutionMode.Same)
     cnnBuilder2.nOut(512)
-    cnnBuilder2.activation(Activation.SIGMOID)
+    cnnBuilder2.activation(Activation.RELU)
+    cnnBuilder2.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, cnnBuilder2.build)
     lindex += 1
 
@@ -123,7 +133,8 @@ case class MoveOrHoldCNN() extends ModelArch {
     cnnBuilder3.padding(1, 1)
     cnnBuilder3.convolutionMode(ConvolutionMode.Same)
     cnnBuilder3.nOut(512)
-    cnnBuilder3.activation(Activation.SIGMOID)
+    cnnBuilder3.activation(Activation.RELU)
+    cnnBuilder3.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, cnnBuilder3.build)
     lindex += 1
 
@@ -139,7 +150,8 @@ case class MoveOrHoldCNN() extends ModelArch {
     cnnBuilder4.padding(1, 1)
     cnnBuilder4.convolutionMode(ConvolutionMode.Same)
     cnnBuilder4.nOut(512)
-    cnnBuilder4.activation(Activation.SIGMOID)
+    cnnBuilder4.activation(Activation.RELU)
+    cnnBuilder4.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, cnnBuilder4.build)
     lindex += 1
 
@@ -148,7 +160,8 @@ case class MoveOrHoldCNN() extends ModelArch {
     cnnBuilder5.padding(1, 1)
     cnnBuilder5.convolutionMode(ConvolutionMode.Same)
     cnnBuilder5.nOut(512)
-    cnnBuilder5.activation(Activation.SIGMOID)
+    cnnBuilder5.activation(Activation.RELU)
+    cnnBuilder5.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, cnnBuilder5.build)
     lindex += 1
 
@@ -160,14 +173,16 @@ case class MoveOrHoldCNN() extends ModelArch {
     lindex += 1
 
     val dense = new DenseLayer.Builder
-    dense.activation(Activation.LEAKYRELU)
+    dense.activation(Activation.RELU)
     dense.nOut(4096)
+    dense.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, dense.build)
     lindex += 1
 
     val dense1 = new DenseLayer.Builder
     dense1.activation(Activation.LEAKYRELU)
     dense1.nOut(4096)
+    dense1.biasInit(0.01).biasLearningRate(0.02)
     listBuilder.layer(lindex, dense1.build)
     lindex += 1
 
@@ -256,7 +271,10 @@ class CNNDataFetcher() extends BaseDataFetcher {
    * is done, this will set it to null.
    */
   def fetchNextGame() = {
-    val ls = shuffledGameIds.dropWhile(i => i != curGame.id).drop(1)
+    ////// TODO: FIXME: DEBUG: Use only the current game again and again /////
+    val ls = shuffledGameIds.dropWhile(i => i != curGame.id)
+    ///////////////////////////////
+    //val ls = shuffledGameIds.dropWhile(i => i != curGame.id).drop(1)
     if (ls.length == 0)
       curGame = null
     else

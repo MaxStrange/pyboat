@@ -83,7 +83,7 @@ object PyBoat {
         println("Value of [0, 0]: " + out.getDouble(0, 0))
         println("Value of [0, 25]: " + out.getDouble(0, 25))
         if (i % 100 == 0)
-          println(out.getRow(10))
+          println(out.getRow(0))
       }
     }
     dsItr.reset()
