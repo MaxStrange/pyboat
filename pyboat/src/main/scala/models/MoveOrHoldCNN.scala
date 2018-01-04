@@ -75,7 +75,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, subsamp0.build)
     lindex += 1
 
-    val cnnBuilder0_5 = new ConvolutionLayer.Builder(5, 5)
+    val cnnBuilder0_5 = new ConvolutionLayer.Builder(7, 7)
     cnnBuilder0_5.stride(1, 1)
     cnnBuilder0_5.padding(1, 1)
     cnnBuilder0_5.biasInit(0.01)
@@ -93,7 +93,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, subsamp0_5.build)
     lindex += 1
 
-    val cnnBuilder1 = new ConvolutionLayer.Builder(3, 3)
+    val cnnBuilder1 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder1.stride(1, 1)
     cnnBuilder1.padding(1, 1)
     cnnBuilder1.biasInit(0.01)
@@ -219,7 +219,11 @@ case class MoveOrHoldCNN() extends ModelArch {
 }
 
 class CNNDataFetcher() extends BaseDataFetcher {
-  val shuffledGameIds = util.Random.shuffle(Database.getAllGameIds())
+  /// TODO: FIXME: Take only the first 5 to learn on /////
+  val numToTake = 25
+  var shuffledGameIds = util.Random.shuffle(Database.getAllGameIds()).take(numToTake)
+  ////////////////////////////////////////////////////////
+  //val shuffledGameIds = util.Random.shuffle(Database.getAllGameIds())
   var curGame = new Game(shuffledGameIds(0))
   val nChannels = curGame.getNumChannelsHoldOrMove()
   numOutcomes = curGame.getNumOutcomesHoldOrMove()
@@ -284,14 +288,16 @@ class CNNDataFetcher() extends BaseDataFetcher {
    * is done, this will set it to null.
    */
   def fetchNextGame() = {
-    ////// TODO: FIXME: DEBUG: Use only the current game again and again /////
-    val ls = shuffledGameIds.dropWhile(i => i != curGame.id)
-    ///////////////////////////////
-    //val ls = shuffledGameIds.dropWhile(i => i != curGame.id).drop(1)
-    if (ls.length == 0)
-      curGame = null
-    else
+    val ls = shuffledGameIds.dropWhile(i => i != curGame.id).drop(1)
+    if (ls.length == 0) {
+      //TODO FIXME go on forever ////
+      shuffledGameIds = util.Random.shuffle(Database.getAllGameIds()).take(numToTake)
+      curGame = new Game(shuffledGameIds(0))
+      ///////////////////////////////
+      //curGame = null
+    } else {
       curGame = new Game(ls(0))
+    }
     println("GAME ID: " + curGame.id)
   }
 }

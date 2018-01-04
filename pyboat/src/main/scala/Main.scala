@@ -27,7 +27,7 @@ object PyBoat {
     util.Random.setSeed(12345)
 
     // !! Change this value to change what model is being trained !! //
-    val architecture: ModelArch = MoveOrHoldMLP()
+    val architecture: ModelArch = MoveOrHoldCNN()
     println("ARCHITECTURE: " + architecture)
 
     val networkConf: MultiLayerConfiguration = architecture match {
@@ -87,11 +87,11 @@ object PyBoat {
         println("Value of [0, 25]: " + out.getDouble(0, 25))
         if (i % 100 == 0) {
           println("=================== Mask  ===================")
-          println(ds.getLabelsMaskArray().getRow(10))
+          println(ds.getLabelsMaskArray().getRow(0))
           println("=================== Label ===================")
-          println(ds.getLabels().getRow(10))
+          println(ds.getLabels().getRow(0))
           println("=================== Output ===================")
-          println(out.getRow(10))
+          println(out.getRow(0))
         }
         if (i % 1000 == 0) {
           println("Saving model...")

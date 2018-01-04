@@ -15,14 +15,14 @@ case class LocalHost() extends DriverConfig {
   val password = ""
 }
 case class Synapse() extends DriverConfig {
-  val url = "jdbc:mysql://10.75.6.229/diplomacy?autoReconnect=true&useSSL=false"
+  val url = "jdbc:mysql://10.1.58.68/diplomacy?autoReconnect=true&useSSL=false"
   val username = "maxst"
   val password = Database.readPasswordFromFile()
 }
 
 object Database {
   val driver = "com.mysql.jdbc.Driver"
-  val driverConfig = LocalHost()
+  val driverConfig = Synapse()
   val url = driverConfig.url
   val username = driverConfig.username
   val password = driverConfig.password
