@@ -44,7 +44,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     val builder = new NeuralNetConfiguration.Builder
     builder.seed(123)
     builder.iterations(1)
-    builder.learningRate(0.02)
+    builder.learningRate(0.08)
     builder.weightInit(WeightInit.XAVIER)
     builder.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
     builder.gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
@@ -63,7 +63,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     cnnBuilder0.biasInit(0.01)
     cnnBuilder0.biasLearningRate(0.02)
     cnnBuilder0.convolutionMode(ConvolutionMode.Same)
-    cnnBuilder0.nOut(256) //number of filters in this layer
+    cnnBuilder0.nOut(128) //number of filters in this layer
     cnnBuilder0.activation(Activation.LEAKYRELU)
     listBuilder.layer(lindex, cnnBuilder0.build)
     lindex += 1
@@ -75,7 +75,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, subsamp0.build)
     lindex += 1
 
-    val cnnBuilder0_5 = new ConvolutionLayer.Builder(7, 7)
+    val cnnBuilder0_5 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder0_5.stride(1, 1)
     cnnBuilder0_5.padding(1, 1)
     cnnBuilder0_5.biasInit(0.01)
@@ -104,7 +104,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, cnnBuilder1.build)
     lindex += 1
 
-    val cnnBuilder1_5 = new ConvolutionLayer.Builder(3, 3)
+    val cnnBuilder1_5 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder1_5.stride(1, 1)
     cnnBuilder1_5.padding(1, 1)
     cnnBuilder1_5.biasInit(0.01)
@@ -122,7 +122,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, subsamp1.build)
     lindex += 1
 
-    val cnnBuilder2 = new ConvolutionLayer.Builder(3, 3)
+    val cnnBuilder2 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder2.stride(1, 1)
     cnnBuilder2.padding(1, 1)
     cnnBuilder2.biasInit(0.01)
@@ -133,7 +133,7 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, cnnBuilder2.build)
     lindex += 1
 
-    val cnnBuilder3 = new ConvolutionLayer.Builder(3, 3)
+    val cnnBuilder3 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder3.stride(1, 1)
     cnnBuilder3.padding(1, 1)
     cnnBuilder3.biasInit(0.01)
@@ -151,9 +151,9 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, subsamp2.build)
     lindex += 1
 
-    val cnnBuilder4 = new ConvolutionLayer.Builder(3, 3)
+    val cnnBuilder4 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder4.stride(1, 1)
-    cnnBuilder4.padding(1, 1)
+    cnnBuilder4.padding(2, 2)
     cnnBuilder4.biasInit(0.01)
     cnnBuilder4.biasLearningRate(0.02)
     cnnBuilder4.convolutionMode(ConvolutionMode.Same)
@@ -162,9 +162,9 @@ case class MoveOrHoldCNN() extends ModelArch {
     listBuilder.layer(lindex, cnnBuilder4.build)
     lindex += 1
 
-    val cnnBuilder5 = new ConvolutionLayer.Builder(3, 3)
+    val cnnBuilder5 = new ConvolutionLayer.Builder(5, 5)
     cnnBuilder5.stride(1, 1)
-    cnnBuilder5.padding(1, 1)
+    cnnBuilder5.padding(2, 2)
     cnnBuilder5.biasInit(0.01)
     cnnBuilder5.biasLearningRate(0.02)
     cnnBuilder5.convolutionMode(ConvolutionMode.Same)
@@ -219,11 +219,7 @@ case class MoveOrHoldCNN() extends ModelArch {
 }
 
 class CNNDataFetcher() extends BaseDataFetcher {
-  /// TODO: FIXME: Take only the first 5 to learn on /////
-  val numToTake = 25
-  var shuffledGameIds = util.Random.shuffle(Database.getAllGameIds()).take(numToTake)
-  ////////////////////////////////////////////////////////
-  //val shuffledGameIds = util.Random.shuffle(Database.getAllGameIds())
+  val shuffledGameIds = util.Random.shuffle(Database.getAllGameIds())
   var curGame = new Game(shuffledGameIds(0))
   val nChannels = curGame.getNumChannelsHoldOrMove()
   numOutcomes = curGame.getNumOutcomesHoldOrMove()
@@ -290,11 +286,7 @@ class CNNDataFetcher() extends BaseDataFetcher {
   def fetchNextGame() = {
     val ls = shuffledGameIds.dropWhile(i => i != curGame.id).drop(1)
     if (ls.length == 0) {
-      //TODO FIXME go on forever ////
-      shuffledGameIds = util.Random.shuffle(Database.getAllGameIds()).take(numToTake)
-      curGame = new Game(shuffledGameIds(0))
-      ///////////////////////////////
-      //curGame = null
+      curGame = null
     } else {
       curGame = new Game(ls(0))
     }
